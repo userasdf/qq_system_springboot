@@ -1,0 +1,97 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<style>
+		.color{
+			background-color: yellowgreen;
+		}
+	</style>
+	<title>聊天系统-好友验证</title>
+</head>
+<body>
+<div class="nk-container">
+	<!-- 头部 -->
+	<header class="bg-dark sticky-top" th:replace="index::header">
+	</header>
+
+	<!-- 内容 -->
+	<div class="main">
+
+		<div class="container" id="varifyList">
+
+			<h6><b class="square"></b>通知</h6>
+			<div class="position-relative">
+				<!-- 选项 -->
+				<ul class="nav nav-tabs mb-3">
+					<li class="nav-item">
+						<a class="nav-link position-relative" th:href="@{/relation/getVarifyFriendPage}">好友验证<span th:text="${allVarifyFriendCount}" class="badge badge-danger" id='allVarifyFriendCount'></span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link position-relative active" th:href="@{/relation/getVarifyGroupPage}">群聊通知<span th:text="${joinGroupApplyCount}" class="badge badge-danger" id='allVarifyFriendCount'></span></a>
+					</li>
+					<li class="nav-item">
+						<!--<a class="nav-link position-relative" th:href="@{/user/getSystemAdvicePage}">系统通知<span class="badge badge-danger" id='allSystemAdviceCount'></span></a>-->
+						<a class="nav-link position-relative" disabled="disabled" onclick="alert('此功能暂未开发！')" >系统通知<span class="badge badge-danger" id='allSystemAdviceCount'></span></a>
+					</li>
+				</ul>
+
+				<!--好友验证列表-->
+				<ul>
+					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="map:${voValGroup}">
+						<img th:src="@{${map.group.headerUrl}}" style='width: 50px;' class="mr-4 rounded-circle" alt="群头像">
+						<u class="mr-3"><span style="font-size: 40px;" th:utext="${map.group.groupName}"></span></u>
+						<div th:onclick="'isAccept('+${varUser.id}+','+${map.group.id}+')'" onmouseover="this.className='media-body color'" onmouseout="this.className='media-body'"  class="media-body" th:each="varUser:${map.allVarifyUser}">
+							<div class="text-muted font-size-12" style="font-size: 20px;">
+								<img th:src="@{${varUser.headerUrl}}" style='width: 20px;' class="mr-4 rounded-circle" alt="验证用户头像">
+								<u class="mr-3"><span th:utext="${varUser.username}"></span></u>
+								<div>
+									<span style='color: red;font-size: 15px;'>验证消息：</span>
+									<span th:utext="${varUser.valMsg}" style="font-size: 15px;"></span>
+								</div>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+
+
+
+		</div>
+	</div>
+
+</div>
+
+<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+<script th:src="@{/js/common/vue.js}"></script>
+<!--<script th:src="@{/js/global.js}"></script>-->
+<script th:src="@{/js/header.js}"></script>
+<script>
+
+
+	//是否接收用户进群申请
+	function isAccept(user_id,group_id) {
+        var is_reject = 1;
+        var choose = confirm("是否接收？")
+		if(choose){
+			is_reject = 0;
+		}
+		$.ajax({
+			url:"/qq_system/relation/applyJoinGroupManage/"+user_id+"/"+group_id+"/"+is_reject
+		});
+        location.reload()
+    }
+
+
+
+</script>
+</body>
+</html>

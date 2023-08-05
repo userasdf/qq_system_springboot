@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head lang="en" xmlns:th="http://www.thymeleaf.org">
+    <meta charset="UTF-8">
+    <title>贪吃蛇</title>
+    <style>
+        h4{
+            display: inline-block;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 150px;
+            height: 400px;
+            border: 1px solid brown;
+        }
+        p{
+            padding: 0;
+            margin: 0;
+        }
+        #mySnack{
+            position: absolute;
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            background: #ffcd26;
+            top: 200px;
+            left: 300px;
+        }
+        #direction{
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            margin-top: -4px;
+            margin-left: -2px;
+            background: red;
+            border-radius: 5px;
+        }
+    </style>
+    <script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+    <script>
+
+        //产生的随机数
+        var isCreateFood = true;
+        var randomTop = new Array(10);
+        var randomLeft = new Array(10);
+        var foodNum = 0;
+        var move_step = 4;
+
+        //游戏是否结束
+        var isGameOver = false;
+        //得分
+        var scores = 0;
+
+
+        //我的宠物蛇
+        var isAlive = true; //是否还活着
+        var isGrow = false; //该瞬间是否可以成长
+        var snackSize = 0;  //贪吃蛇的长度
+        var myLeft = 300;   //我的宠物蛇距离窗口左边的距离
+        var myTop = 200;   //我的宠物蛇距离窗口右边的距离
+        var direction = "top";//转换方向,贪吃蛇默认运动方向为上
+
+
+        var searchLen = 5;//搜索长度
+
+        var rightNum = 10000000;
+        var leftNum = 10000000;
+
+
+        var speed = 100;
+
+        function autoMove() {
+            if(direction=="left"){
+                click37();
+            }else if(direction=="top"){
+                click38();
+            }else if(direction=="right"){
+                click39();
+            }else{
+                click40();
+            }
+        }
+
+        //蛇自动走
+        var myInterval = setInterval(function () {
+            autoMove();
+        },speed);
+
+        function addSpeed() {
+            clearInterval(myInterval);
+            if(speed>10)
+                speed = speed-10;
+            else if(speed>0){
+                speed = 1;
+            }
+            myInterval = setInterval(function (args) {
+                autoMove();
+            },speed);
+            $("#speed").text("每"+speed+"ms移动一次");
+        }
+
+        function minSpeed() {
+            clearInterval(myInterval);
+            if(speed==1){
+                speed = 10;
+            }else{
+                speed = speed+10;
+            }
+            myInterval = setInterval(function () {
+                autoMove()
+            },speed);
+            $("#speed").text("每"+speed+"ms移动一次");
+        }
+
+        function superAddSpeed() {
+            if(move_step<15)
+                move_step++;
+            $("#speed_step").text("每次移动"+move_step+"个像素(px)");
+        }
+
+        function superMinusSpeed() {
+            if(move_step>1)
+                move_step--;
+            $("#speed_step").text("每次移动"+move_step+"个像素(px)");
+        }
+
+        function smallifySearchLen() {
+            if(searchLen>1)
+                searchLen--;
+            $("#serachLen").text("蛇舌长"+searchLen+"个像素(px)");
+        }
+
+        function largeifySearchLen() {
+            if(searchLen<15)
+                searchLen++;
+            $("#serachLen").text("蛇舌长"+searchLen+"个像素(px)");
+        }
+
+
+        left_side = 249;
+        right_side = 1242;
+        top_side = 42;
+        bottom_side = 534;
+
+        //方向改变事件
+        function changeDir(dir) {
+            $.ajax({
+                url:"/qq_system/game/changeDir?dir="+dir
+            });
+        }
+
+        //得分
+        function snackGrow(size) {
+            $.ajax({
+                url:"/qq_system/game/snackGrow?size="+size
+            });
+        }
+
+        function moveBody() {
+            //身体运动
+            if(snackSize>=1){
+                $("#body"+rightNum).css("top",(myTop)+"px");
+                $("#body"+rightNum).css("left",(myLeft)+"px");
+                $("#body"+rightNum).attr("id","body"+leftNum);
+                rightNum--;
+                leftNum--;
+            }
+        }
+
+        function click37() {
+            if(direction=="top"||direction=="bottom"||direction=="left"){
+                moveBody();
+                if(direction!="left")
+                    changeDir("left");
+                direction = "left";
+                $("#direction").css({"top":"1px","left":"-5px"});
+                if(myLeft>left_side){
+                    myLeft = myLeft-move_step;
+                }else{
+                    myLeft = right_side;
+                }
+                $("#mySnack").css("left",(myLeft)+"px");
+            }
+        }
+
+        function click38() {
+            if(direction=="left"||direction=="right"||direction=="top"){
+
+                moveBody();
+                if(direction!="top")
+                    changeDir("top");
+                direction = "top";
+                $("#direction").css({"top":"-4px","left":"1px"});
+                if(myTop>top_side){
+                    myTop = myTop-move_step;
+                }else{
+                    myTop = bottom_side;
+                }
+                $("#mySnack").css("top",(myTop)+"px");
+            }
+        }
+
+        function click39() {
+            if(direction=="top"||direction=="bottom"||direction=="right"){
+
+                moveBody();
+                if(direction!="right")
+                    changeDir("right");
+                direction = "right";
+                $("#direction").css({"top":"1px","left":"6px"});
+                if(myLeft<right_side){
+                    myLeft = myLeft+move_step;
+                }else{
+                    myLeft = left_side;
+                }
+                $("#mySnack").css("left",(myLeft)+"px");
+            }
+        }
+
+        function click40() {
+            if(direction=="left"||direction=="right"||direction=="bottom"){
+
+                moveBody();
+
+                if(direction!="bottom")
+                    changeDir("bottom");
+                direction = "bottom";
+                $("#direction").css({"top":"6px","left":"1px"});
+                if(myTop<bottom_side){
+                    myTop = myTop+move_step;
+                }else{
+                    myTop = top_side;
+                }
+                $("#mySnack").css("top",(myTop)+"px");
+            }
+        }
+
+
+
+        //用户按下某个键
+        $(document).keydown(function(e){
+
+            //判断并进行运动
+            if(e.keyCode=="37"){
+                click37();
+            }
+            if(e.keyCode=="38"){
+                click38();
+            }
+            if(e.keyCode=="39"){
+                click39();
+            }
+            if(e.keyCode=="40"){
+                click40();
+            }
+        });
+
+        //产生随机食物的方法
+        function randomCreateFood(){
+            if(!isGameOver){
+                if(isCreateFood){
+                    isCreateFood = false;
+                    foodNum++;
+                    randomTop[foodNum] = top_side+parseInt(Math.random()*450);
+                    randomLeft[foodNum] = left_side+parseInt(Math.random()*750);
+                    var food = document.createElement("p");
+                    food.setAttribute("id","food"+foodNum);
+                    food.style.position = "absolute";
+                    food.style.top = randomTop[foodNum]+"px";
+                    food.style.left = randomLeft[foodNum]+"px";
+                    food.style.width = "5px";
+                    food.style.height = "5px";
+                    food.style.display = "inline-block";
+                    food.style.background = "rgb(255, 0, 0)";
+                    document.getElementById("container").appendChild(food);
+                }
+            }
+
+
+        }
+
+        //食物的动态效果
+        setInterval(function () {
+            //食物自动闪烁
+            if($("#food"+foodNum).css("background-color")=="rgb(255, 0, 0)"){
+                $("#food"+foodNum).css("background-color","rgb(128, 0, 128)")
+            }else if($("#food"+foodNum).css("background-color")=="rgb(128, 0, 128)"){
+                $("#food"+foodNum).css("background-color","rgb(0, 128, 128)")
+            }else{
+                $("#food"+foodNum).css("background-color","rgb(255, 0, 0)")
+            }
+            //食物一大一小
+            var tempTop = parseInt($("#food"+foodNum).css("top").replace("px",""));
+            var tempLeft = parseInt($("#food"+foodNum).css("left").replace("px",""));
+            if($("#food"+foodNum).css("width")=="5px"){
+                $("#food"+foodNum).css("width","9px");
+                $("#food"+foodNum).css("height","9px");
+
+                $("#food"+foodNum).css("top",tempTop-2+"px");
+                $("#food"+foodNum).css("left",tempLeft-2+"px");
+            }else{
+                $("#food"+foodNum).css("width","5px");
+                $("#food"+foodNum).css("height","5px");
+                $("#food"+foodNum).css("top",tempTop+2+"px");
+                $("#food"+foodNum).css("left",tempLeft+2+"px");
+            }
+        },300);
+
+        //系统无时不刻都在检测各个系统变量
+        setInterval(
+            function(){
+                //游戏没有结束
+                if(!isGameOver){
+                    randomCreateFood();//产生食物
+                }
+
+                //显示分数
+                $("#score").text("您的得分是："+snackSize+",移动方向："+direction+","+leftNum+","+rightNum);
+                // document.getElementById("score").innerHTML = "您的得分是："+snackSize;
+
+
+                //吃到食物
+                if((myTop<(randomTop[foodNum]+searchLen)&&myTop>(randomTop[foodNum]-searchLen))
+                    &&((myLeft<(randomLeft[foodNum]+searchLen)&&myLeft>(randomLeft[foodNum]-searchLen)))){
+                    var food = document.getElementById("food"+foodNum);
+                    food.parentNode.removeChild(food);
+                    isCreateFood = true;
+                    isGrow = true;
+                }
+                //贪吃蛇成长
+                if(isGrow){
+                    isGrow = false;
+                    snackSize++;
+                    snackGrow(snackSize);
+                    rightNum++;
+                    var body = document.createElement("span");
+                    body.setAttribute("id","body"+rightNum);
+                    body.style.width = "5px";
+                    body.style.height = "5px";
+                    body.style.display = "inline-block";
+                    body.style.position = "absolute";
+                    body.style.background = "green";
+                    //如果贪吃蛇吃的是第一个食物
+                    if(snackSize==1){
+                        body.style.top = (myTop)+"px";
+                        body.style.left = (myLeft)+"px";
+                    }else{
+                        body.style.top = "0px";
+                        body.style.left = "0px";
+                    }
+                    document.getElementById("container").appendChild(body);
+                }
+
+
+
+            },1
+        )
+
+        function randomChooseDir() {
+            //随机行走
+            var tmp = parseInt(Math.random()*20);
+            if(tmp<5){
+                if(direction=="left"||direction=="right")
+                    direction = "top";
+            }
+            else if(tmp<10){
+                if(direction=="left"||direction=="right")
+                    direction = "bottom";
+            }
+            else if(tmp<15){
+                if(direction=="top"||direction=="bottom")
+                    direction = "left";
+            }
+            else{
+                if(direction=="top"||direction=="bottom")
+                    direction = "right";
+            }
+        }
+
+        //智能行走
+        function aiWalk() {
+            if(myTop>randomTop[foodNum]&&myLeft<randomLeft[foodNum]){//右上方
+                if(direction=="left")
+                    direction = "top";
+                else if(direction=="bottom")
+                    direction = "right";
+            }else if(myTop<randomTop[foodNum]&&myLeft<randomLeft[foodNum]){//右下方
+                if(direction=="top")
+                    direction = "right";
+                else if(direction=="left")
+                    direction = "bottom";
+            }else if(myTop>randomTop[foodNum]&&myLeft>randomLeft[foodNum]){//左上方
+                if(direction=="bottom")
+                    direction = "left";
+                else if(direction=="right")
+                    direction = "top";
+            }else{//左下方
+                if(direction=="top")
+                    direction = "left";
+                else if(direction=="right")
+                    direction = "bottom";
+            }
+
+        }
+
+        var randomInterval = null;
+        function randomWalk() {
+            var btnTxt = $("#randomWalk").text();
+            clearInterval(randomInterval);
+            if(btnTxt=="普通模式"){
+                btnTxt = "随机游走";
+                randomInterval = setInterval(function (args) { randomChooseDir() },1000);
+            }else if(btnTxt=="随机游走"){
+                btnTxt = "智能行走";
+                randomInterval = setInterval(function (args) { aiWalk() },1);
+            }else{
+                btnTxt = "普通模式";
+            }
+            $("#randomWalk").text(btnTxt);
+        }
+
+
+
+    </script>
+</head>
+<body>
+
+<span id="score"></span>
+
+<div style="border: 1px solid red;display: flex">
+    <h3 style="width: 250px;margin-top: 20px;margin-left: 20px;">
+
+        <p>
+            <div id="speed">每100ms移动一次</div>
+            <div id="speed_step">每次移动4个像素(px)</div>
+            <div id="serachLen">蛇舌长5个像素(px)</div>
+        </p>
+        <p>
+            <div>
+                <button onclick="largeifySearchLen()">加大舌长</button>
+                <button  onclick="smallifySearchLen()">减少舌长</button>
+            </div>
+
+            <div>
+                <button id="superAddSpeed" onclick="superAddSpeed()">超级加速</button>
+                <button id="superMinusSpeed" onclick="superMinusSpeed()">超级减速</button>
+            </div>
+
+            <div>
+                <button onclick="addSpeed()">加速</button>
+                <button onclick="minSpeed()">减速</button>
+                <button id="randomWalk" onclick="randomWalk()">普通模式</button>
+            </div>
+        </p>
+        <p>
+            <button style="margin-left: 57px;font-size: 35px;" onclick="click38()">上</button>
+        </p>
+        <p>
+            <button style="font-size: 35px;" onclick="click37()">左</button>
+            <button style="font-size: 35px;" disabled="disabled">中</button>
+            <button style="font-size: 35px;" onclick="click39()">右</button>
+        </p>
+        <p>
+            <button style="margin-left: 57px;font-size: 35px;" onclick="click40()">下</button>
+        </p>
+    </h3>
+    <div id="container" style="width: 100%;height:500px;border: 1px solid blue;margin: 10px;">
+        <p id="mySnack">
+            <span id="direction"></span>
+        </p>
+    </div>
+</div>
+
+
+</body>
+</html>

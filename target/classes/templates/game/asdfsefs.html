@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>贪吃蛇</title>
+    <style>
+        h3{
+            width: 100px;
+            margin: 0px auto;
+        }
+        h4{
+            display: inline-block;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 150px;
+            height: 400px;
+            border: 1px solid brown;
+        }
+        p{
+            padding: 0;
+            margin: 0;
+        }
+        div{
+            border: 1px solid red;
+            width: 900px;
+            height: 500px;
+            margin: 0px auto;
+            position: relative;
+        }
+        #mySnack{
+            position: absolute;
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            background: green;
+            top: 200px;
+            left: 300px;
+            /*border-radius: 5px;*/
+        }
+        #direction{
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            top: -3px;
+            left: 0px;
+            background: red;
+            border-radius: 5px;
+        }
+    </style>
+    <script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+</head>
+<body>
+<h3>贪吃蛇</h3>
+<h4 id="score"></h4>
+<div id="container">
+    <p id="mySnack">
+        <span id="direction"></span>
+    </p>
+
+</div>
+<script>
+
+    //产生的随机数
+    var isCreateFood = true;
+    var randomTop = new Array(10);
+    var randomLeft = new Array(10);
+    var foodNum = 0;
+
+    //游戏是否结束
+    var isGameOver = false;
+    //得分
+    var scores = 0;
+
+
+    //我的宠物蛇
+    var isAlive = true; //是否还活着
+    var isGrow = false; //该瞬间是否可以成长
+    var snackSize = 0;  //贪吃蛇的长度
+    var myLeft = 300;   //我的宠物蛇距离窗口左边的距离
+    var myTop = 200;   //我的宠物蛇距离窗口右边的距离
+    var direction = "top";//转换方向,贪吃蛇默认运动方向为上
+
+
+
+    var directionNum = 0;
+    var directionTop = new Array(6666666);
+    var directionLeft = new Array(6666666);
+    var changedDirection = new Array(6666666); //贪吃蛇改变方向后的方向
+
+    $(document).ready(function(){
+
+
+
+        //用户按下某个键
+        $(document).keydown(function(e){
+
+
+
+            if(e.keyCode=="65"){
+                document.getElementById("container").setAttribute("id","121212212121"+2);
+                alert()
+            }
+
+
+            //判断并进行运动
+            if(e.keyCode=="37"){
+                if(direction=="top"||direction=="bottom"||direction=="left"){
+
+                    //身体运动
+                    if(snackSize>=1){
+                        for(var num=snackSize;num>=2;num--){
+                            $("#body"+num).css("top",$("#body"+(num-1)).css("top"));
+                            $("#body"+num).css("left",$("#body"+(num-1)).css("left"));
+                        }
+                        if(direction=="top"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="left"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="bottom"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="right"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                    }
+
+                    direction = "left";
+                    $("#direction").css({"top":"1px","left":"-5px"});
+                    if(myLeft>0){
+                        myLeft = myLeft-5;
+                    }else{
+                        myLeft = 890;
+                    }
+                    $("#mySnack").animate({"left":myLeft+"px"},1);
+                }else{
+                    alert("贪吃蛇不能倒退!")
+                }
+
+            }
+            if(e.keyCode=="38"){
+                if(direction=="left"||direction=="right"||direction=="top"){
+
+                    //身体运动
+                    if(snackSize>=1){
+                        for(var num=snackSize;num>=2;num--){
+                            $("#body"+num).css("top",$("#body"+(num-1)).css("top"));
+                            $("#body"+num).css("left",$("#body"+(num-1)).css("left"));
+                        }
+                        if(direction=="top"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="left"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="bottom"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="right"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                    }
+
+                    direction = "top";
+                    $("#direction").css({"top":"-4px","left":"1px"});
+                    if(myTop>-15){
+                        myTop = myTop-5;
+                    }else{
+                        myTop = 475;
+                    }
+                    $("#mySnack").animate({"top":myTop+"px"},1);
+                }else{
+                    alert("贪吃蛇不能倒退!")
+                }
+
+            }
+            if(e.keyCode=="39"){
+                if(direction=="top"||direction=="bottom"||direction=="right"){
+
+                    //身体运动
+                    if(snackSize>=1){
+                        for(var num=snackSize;num>=2;num--){
+                            $("#body"+num).css("top",$("#body"+(num-1)).css("top"));
+                            $("#body"+num).css("left",$("#body"+(num-1)).css("left"));
+                        }
+                        if(direction=="top"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="left"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="bottom"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="right"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                    }
+
+                    direction = "right";
+                    $("#direction").css({"top":"1px","left":"6px"});
+                    if(myLeft<890){
+                        myLeft = myLeft+5;
+                    }else{
+                        myLeft = 0;
+                    }
+                    $("#mySnack").animate({"left":myLeft+"px"},1);
+                }else{
+                    alert("贪吃蛇不能倒退!")
+                }
+
+            }
+            if(e.keyCode=="40"){
+                if(direction=="left"||direction=="right"||direction=="bottom"){
+
+                    //身体运动
+                    if(snackSize>=1){
+                        for(var num=snackSize;num>=2;num--){
+                            $("#body"+num).css("top",$("#body"+(num-1)).css("top"));
+                            $("#body"+num).css("left",$("#body"+(num-1)).css("left"));
+                        }
+                        if(direction=="top"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="left"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="bottom"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                        if(direction=="right"){
+                            $("#body1").css("top",(myTop)+"px");
+                            $("#body1").css("left",(myLeft)+"px");
+                        }
+                    }
+
+                    direction = "bottom";
+                    $("#direction").css({"top":"6px","left":"1px"});
+                    if(myTop<475){
+                        myTop = myTop+5;
+                    }else{
+                        myTop = -15;
+                    }
+                    $("#mySnack").animate({"top":myTop+"px"},1);
+                }else{
+                    alert("贪吃蛇不能倒退!")
+                }
+
+            }
+        });
+
+        //产生随机食物的方法
+        function randomCreateFood(){
+            if(!isGameOver){
+                if(isCreateFood){
+                    isCreateFood = false;
+                    foodNum++;
+                    randomTop[foodNum] = parseInt(Math.random()*450);
+                    randomLeft[foodNum] = parseInt(Math.random()*750);
+                    var food = document.createElement("p");
+                    food.setAttribute("id","food"+foodNum);
+                    food.style.position = "absolute";
+                    food.style.top = randomTop[foodNum]+"px";
+                    food.style.left = randomLeft[foodNum]+"px";
+                    food.style.width = "5px";
+                    food.style.height = "5px";
+                    food.style.display = "inline-block";
+                    food.style.background = "black";
+                    document.getElementById("container").appendChild(food);
+                }
+            }
+
+
+        }
+
+
+        //系统无时不刻都在检测各个系统变量
+        setInterval(
+                function(){
+                    //游戏没有结束
+                    if(!isGameOver){
+                        randomCreateFood();//产生食物
+                    }
+
+                    //显示分数
+                    document.getElementById("score").innerHTML = "您的得分是："+snackSize;
+
+                    //达到满分
+                    if(snackSize==1000){
+                        isGameOver = true;
+                        isCreateFood = false;
+                        snackSize = 1000+"分";
+                        alert("牛，把这1000个都给吃完了！");
+                    }
+
+                    //吃到食物
+                    if((myTop<(randomTop[foodNum]+10)&&myTop>(randomTop[foodNum]-10))
+                            &&((myLeft<(randomLeft[foodNum]+10)&&myLeft>(randomLeft[foodNum]-10)))){
+                        var food = document.getElementById("food"+foodNum);
+                        food.parentNode.removeChild(food);
+                        isCreateFood = true;
+                        isGrow = true;
+                    }
+                    //贪吃蛇成长
+                    if(isGrow){
+                        isGrow = false;
+                        snackSize++;
+                        var body = document.createElement("span");
+                        body.setAttribute("id","body"+snackSize);
+                        body.style.width = "5px";
+                        body.style.height = "5px";
+                        body.style.display = "inline-block";
+                        body.style.position = "absolute";
+                        body.style.background = "green";
+                        //如果贪吃蛇吃的是第一个食物
+                        if(snackSize==1){
+                            if(direction=="top"){
+                                body.style.top = (myTop)+"px";
+                                body.style.left = (myLeft)+"px";
+                            }
+                            if(direction=="left"){
+                                body.style.top = (myTop)+"px";
+                                body.style.left = (myLeft)+"px";
+                            }
+                            if(direction=="bottom"){
+                                body.style.top = (myTop)+"px";
+                                body.style.left = (myLeft)+"px";
+                            }
+                            if(direction=="right"){
+                                body.style.top = (myTop)+"px";
+                                body.style.left = (myLeft)+"px";
+                            }
+                        }else{
+                            /*body.style.top = parseInt(document.getElementById("body"+(snackSize-1)).style.top)+10+"px";
+                            body.style.left = parseInt($("#body"+(snackSize-1)).css("left"))+"px";*/
+                            body.style.top = "0px";
+                            body.style.left = "0px";
+                        }
+                        document.getElementById("container").appendChild(body);
+                    }
+
+
+
+
+
+
+
+
+                },1
+        )
+
+
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-好友列表</title>
+	<style>
+		.color{
+			background-color: #37d2ff;
+		}
+	</style>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container" id="memberList">
+				<h6 ><b class="square"></b>群成员列表</h6>
+				<div style="border: 1px solid gray;background-color: #f64eff">
+					<img th:src="@{${group.headerUrl}}" width='50px;' class="mr-4 rounded-circle" alt="群组头像">
+					<span style="font-size: 35px;" th:utext="${group.groupName}"></span>
+					<div>
+						创建时间：<span th:utext="${#dates.format(group.createTime,'yyyy-MM-dd HH:mm:ss')}"></span>
+					</div>
+					<div>
+						创建者：<span th:utext="${createUser.username}"></span>
+					</div>
+					<div>
+						我的群级别：
+						<span th:if="${user.groupLevel} eq 0" style="color:gray">普通用户</span>
+						<span th:if="${user.groupLevel} eq 1" style="color:green;">管理员</span>
+						<span th:if="${user.groupLevel} eq 2" style="color:yellow">群主</span>
+					</div>
+				</div>
+				<ul style="padding: 0px;">
+					<li style="background-color: #aaadcd;margin: 0px;" th:each="member:${userList}" class="media pb-3 pt-3 mb-3 border-bottom">
+						<!--未读消息数量的标签，如果为0，则隐藏，不为0，则显示-->
+						<a th:href="@{'/user/profile?id='+${user.id}}">
+							<img th:src="@{${member.headerUrl}}" width='50px;' class="mr-4 rounded-circle" alt="用户头像">
+						</a>
+						<div  class="media-body">
+							<div class="text-muted font-size-12" style="font-size: 20px;">
+								<u class="mr-3">
+									<span th:text="${member.username}"></span>
+									<span th:if="${member.groupLevel} eq 0" style="color:gray">普通用户</span>
+									<span th:if="${member.groupLevel} eq 1" style="color:green">管理员</span>
+									<span th:if="${member.groupLevel} eq 2" style="color: yellow">群主</span>
+									<!--自己为群主-->
+									<span th:if="${user.groupLevel} eq 2">
+										<!--该用户为管理员-->
+										<button th:if="${member.groupLevel} eq 1"
+												th:onclick="'updateUserLevel('+${group.id}+','+${member.id}+',0'+')'">降为普通用户</button>
+										<!--该用户为普通用户-->
+										<button th:if="${member.groupLevel} eq 0"
+												th:onclick="'updateUserLevel('+${group.id}+','+${member.id}+',1'+')'">升级为管理员</button>
+									</span>
+									<!--自己为管理员-->
+									<span th:if="${user.groupLevel} eq 1">
+										<!--该用户为普通用户-->
+										<button th:if="${member.groupLevel} eq 0"
+												th:onclick="'updateUserLevel('+${group.id}+','+${member.id}+',1'+')'">升级为管理员</button>
+									</span>
+								</u>
+								<div>
+									<span th:text="${member.personalLabel}"></span>
+								</div>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+	<!--<script th:src="@{/js/global.js}"></script>-->
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+		function updateUserLevel(groupId,userId,level) {
+		    var cfm = confirm("是否确认操作？")
+			if(cfm){
+                $.ajax({
+                    url:"/qq_system/group/updateUserLevel",
+                    data:{"groupId":groupId,"userId":userId,"level":level}
+                });
+                location.reload();
+			}
+
+        }
+
+	</script>
+</body>
+</html>

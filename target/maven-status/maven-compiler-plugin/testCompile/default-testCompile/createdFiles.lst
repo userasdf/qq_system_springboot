@@ -1,0 +1,16 @@
+com\work\qq_system_springboot\demo\Producer.class
+com\work\qq_system_springboot\socket\TestTcpClient.class
+com\work\qq_system_springboot\tools\FileUtils.class
+com\work\qq_system_springboot\testFun\MyTest.class
+com\work\qq_system_springboot\demo\KafkaConsumer.class
+com\work\qq_system_springboot\demo\Consumer.class
+com\work\qq_system_springboot\demo\KafkaProducer.class
+com\work\qq_system_springboot\demo\TestSender.class
+com\work\qq_system_springboot\demo\TestKafka.class
+com\work\qq_system_springboot\demo\JSONTest.class
+com\work\qq_system_springboot\demo\Practice.class
+com\work\qq_system_springboot\demo\MyTest.class
+com\work\qq_system_springboot\socket\TestUdpClient.class
+com\work\qq_system_springboot\demo\ExecPythonTest.class
+com\work\qq_system_springboot\demo\ClickTest.class
+com\work\qq_system_springboot\QqSystemSpringbootApplicationTests.class

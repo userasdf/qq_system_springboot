@@ -1,0 +1,169 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-好友列表</title>
+	<style>
+		.color{
+			background-color: #37d2ff;
+		}
+	</style>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<div th:if="${isGroup} eq '0'" class="container" id="friendList">
+				<h6 ><b class="square"></b>好友列表</h6>
+				<ul>
+					<li th:each="map:${list}" class="media pb-3 pt-3 mb-3 border-bottom">
+						<!--未读消息数量的标签，如果为0，则隐藏，不为0，则显示-->
+						<span th:id="${map.friend.id}+'_cnt'" class="badge badge-danger" hidden="hidden" th:if="${map.unreadCount==0}" th:text="${map.unreadCount}"></span>
+						<span th:id="${map.friend.id}+'_cnt'" class="badge badge-danger" th:if="${map.unreadCount!=0}" th:text="${map.unreadCount}"></span>
+						<a th:href="@{'/user/profile?id='+${map.friend.id}}">
+							<img th:src="@{${map.friend.headerUrl}}" width='50px;' class="mr-4 rounded-circle" alt="用户头像">
+						</a>
+						<div  class="media-body">
+							<div th:onclick="|sendMsg(${map.friend.id},0)|" onmouseover="this.className='color'" onmouseout="this.className=''" class="text-muted font-size-12" style="font-size: 20px;">
+								<u class="mr-3">
+									<span th:text="${map.friend.username}"></span>
+								</u>
+								<div>
+									<!--消息内容如果不为空则显示-->
+									<span th:if="${map.latestMessages!=null}">
+										<span th:id="${map.friend.id}+'_time'" style='color: red' th:text="${#dates.format(map.latestMessages.createTime,'yyyy-MM-dd HH:mm:ss')}"></span>
+										<span th:id="${map.friend.id}+'_content'" th:if="${map.latestMessages.topic} ne 'file'" th:text="${map.latestMessages.content}"></span>
+										<span th:id="${map.friend.id}+'_content'" th:if="${map.latestMessages.topic} eq 'file'" >图片</span>
+									</span>
+									<!--消息内容如果为空则隐藏-->
+									<span th:id="${map.friend.id}+'_msg'" th:if="${map.latestMessages==null}" hidden="hidden">
+										<span th:id="${map.friend.id}+'_time'" style='color: red' ></span>
+										<span th:id="${map.friend.id}+'_content'"></span>
+									</span>
+								</div>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+			<div th:if="${isGroup} eq '1'" class="container" id="groupList">
+				<h6 ><b class="square"></b>群聊列表</h6>
+				<button onclick="addGroup()">添加群聊</button>
+				<ul>
+					<li th:each="map:${list}" class="media pb-3 pt-3 mb-3 border-bottom">
+						<a th:href="@{/group/getGroupUserPage(groupId=${map.group.id})}">
+							<img th:src="@{${map.group.headerUrl}}" width='50px;' class="mr-4 rounded-circle" alt="群组头像">
+						</a>
+						<div  class="media-body">
+							<div th:onclick="|sendMsg(${map.group.id},1)|" onmouseover="this.className='color'" onmouseout="this.className=''" class="text-muted font-size-12" style="font-size: 20px;">
+								<u class="mr-3">
+									<span th:text="${map.group.groupName}"></span>
+								</u>
+								<div>
+									<span th:if="${map.latestMessages!=null}">
+										<span style='color: red' th:text="${#dates.format(map.latestMessages.createTime,'yyyy-MM-dd HH:mm:ss')}"></span>
+										<span th:if="${map.latestMessages.topic} ne 'file'" th:text="${map.latestMessages.content}"></span>
+										<span th:if="${map.latestMessages.topic} eq 'file'" >图片</span>
+									</span>
+								</div>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+	<!--<script th:src="@{/js/global.js}"></script>-->
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+
+        var sessionId = $("#userId").val()+"_friendList";//socket的id
+
+
+
+        var websocket;
+        if ('WebSocket' in window) {
+            websocket = new WebSocket("ws://" + document.location.host + "/qq_system/imserver/"+sessionId);
+        } else if ('MozWebSocket' in window) {
+            websocket = new MozWebSocket("ws://" + document.location.host + "/qq_system/imserver/"+sessionId);
+        } else {
+            websocket = new SockJS("http://" + document.location.host + "/qq_system/imserver/sockjs/"+sessionId);
+        }
+        //连接成功
+        websocket.onopen = function(evnt) {
+        };
+        //收到消息
+        websocket.onmessage = function(evnt) {
+            var data = JSON.parse(evnt.data);
+			var id_cnt = "#"+data.fromId+"_cnt";
+			var id_content = "#"+data.fromId+"_content";
+			var id_time = "#"+data.fromId+"_time";
+			var id_msg = "#"+data.fromId+"_msg";
+            $(id_cnt).removeAttr("hidden");
+            $(id_msg).removeAttr("hidden");
+			$(id_cnt).text(parseInt($(id_cnt).text())+1);//更新指定好友发送的未读消息数量
+			if(data.topic=="file"){
+                $(id_content).text("图片");//更新指定好友发送的内容
+            }else{
+                $(id_content).text(data.content);//更新指定好友发送的内容
+            }
+            $(id_time).text(formatTime(data.createTime));
+        };
+
+
+		function addGroup() {
+			var groupName = prompt("请输入群名称：");
+			if(groupName==null||groupName=="")
+			    return;
+			$.ajax({
+				url:"/qq_system/relation/addGroup?groupName="+groupName,
+				success:function (data) {
+					alert(data)
+					location.reload();
+                },
+				error:function (data) {
+				    alert("系统发生未知的错误！")
+					alert(data)
+                }
+			})
+        }
+
+        function sendMsg(id,isGroup) {
+            location.href = "/qq_system/message/getMessagePage/"+id+"/"+isGroup;
+        }
+
+
+        function formatTime(time) {
+            var year = time.getFullYear();
+            var month = time.getMonth() + 1;
+            var dates = time.getDate();
+            var day = time.getDay();
+            var hour = time.getHours();
+            hour = hour < 10 ? '0' + hour : hour;
+            var minute = time.getMinutes();
+            minute = minute < 10 ? '0' + minute : minute;
+            var second = time.getSeconds();
+            second = second < 10 ? '0' + second : second;
+            return year + '-' + month + '-' + dates + '-\t' + hour + ':' + minute + ':' + second + '\t';
+        }
+
+	</script>
+</body>
+</html>

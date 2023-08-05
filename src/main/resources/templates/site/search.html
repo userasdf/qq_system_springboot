@@ -1,0 +1,146 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-搜索结果</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container">
+				<h6>
+					<b class="square"></b>
+					查询结果:
+					<span th:text="${userSize}"></span>个用户，
+					<span th:text="${groupSize}"></span>个群聊
+				</h6>
+				<!-- 用户列表或群聊列表 -->
+				<ul class="list-unstyled mt-4">
+					<!--动态加载用户-->
+					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="map:${voUserList}">
+						<a th:href="@{/user/profile(id=${map.user.id})}">
+							<img th:src="@{${map.user.headerUrl}}" style="width: 30px" class="mr-4 rounded-circle" alt="用户头像">
+						</a>
+						<div class="media-body">
+
+							<div class="text-muted font-size-12" style="font-size: 20px;">
+								<u class="mr-3">
+									<a th:href="@{/user/profile(id=${map.user.id})}">
+										<span th:text="|用户:${map.user.username}|"></span>
+									</a>
+								</u>
+								<ul class="d-inline float-right">
+									<button th:if="${map.relation} eq '陌生'" class="d-inline ml-2" th:onclick="'addFriend('+${map.user.id}+')'">添加好友</button>
+									<button th:if="${map.relation} eq '好友'" disabled class="d-inline ml-2">已为好友</button>
+									<button th:if="${map.relation} eq '待验证'" disabled class="d-inline ml-2">待验证</button>
+								</ul>
+								<div th:text="|签名:${map.user.personalLabel}|"></div>
+							</div>
+						</div>
+					</li>
+					<!--动态加载群聊-->
+					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="map:${voGroupList}">
+						<img th:src="@{${map.group.headerUrl}}" style="width: 30px" class="mr-4 rounded-circle" alt="群组头像">
+						<div class="media-body">
+
+							<div class="text-muted font-size-12" style="font-size: 20px;">
+								<u class="mr-3">
+									<span th:text="|群聊:${map.group.groupName}|"></span>
+								</u>
+								<ul class="d-inline float-right">
+									<button th:if="${map.relation} eq '陌生'" class="d-inline ml-2" th:onclick="'addGroup('+${map.group.id}+')'">申请入群</button>
+									<button th:if="${map.relation} eq '群成员'" disabled class="d-inline ml-2" >群成员</button>
+									<button th:if="${map.relation} eq '待验证'" disabled class="d-inline ml-2" >待验证</button>
+								</ul>
+								<div th:text="|创建者:${map.createUser.username}|"></div>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<!--<script th:src="@{/js/global.js}"></script>-->
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+        var userId = $("#userId").val()
+
+        var websocket;
+        if ('WebSocket' in window) {
+            websocket = new WebSocket("ws://" + document.location.host + "/qq_system/imserver/"+userId);
+        } else if ('MozWebSocket' in window) {
+            websocket = new MozWebSocket("ws://" + document.location.host + "/qq_system/imserver/"+userId);
+        } else {
+            websocket = new SockJS("http://" + document.location.host + "/qq_system/imserver/sockjs/"+userId);
+        }
+        //连接成功
+        websocket.onopen = function(evnt) {
+        };
+        //收到消息
+        websocket.onmessage = function(evnt) {
+        };
+
+        //添加好友
+		function addFriend(toId) {
+
+
+            var varifyMsg = prompt("请输入验证消息","我是");
+            if(varifyMsg==null){
+                return;
+			}
+            if(varifyMsg==""||varifyMsg==null)
+                varifyMsg = "陌生人请求添加好友";
+
+            var msg = {
+                "fromId":userId,
+				"toId":toId,
+				"content":varifyMsg,
+				"topic":"addRelation",
+				"isGroup":"0"
+            };
+
+            websocket.send(JSON.stringify(msg));//向服务端发送消息
+			location.reload();
+        }
+
+        //申请入群
+		function addGroup(id) {
+            var varifyMsg = prompt("请输入验证消息","我是");
+            if(varifyMsg==null){
+                return;
+            }
+            if(varifyMsg=="")
+                varifyMsg = "陌生人请求入群";
+
+            var msg = {
+                "fromId":userId,
+                "toId":id,
+                "content":varifyMsg,
+                "topic":"addRelation",
+                "isGroup":"1"
+            };
+
+            websocket.send(JSON.stringify(msg));//向服务端发送消息
+			location.reload();
+        }
+	</script>
+</body>
+</html>

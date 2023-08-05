@@ -1,0 +1,253 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-系统通知</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+
+			<div class="container">
+				<h6><b class="square"></b>通知</h6>
+				<div class="position-relative">
+					<!-- 选项 -->
+					<ul class="nav nav-tabs mb-3">
+						<li class="nav-item">
+							<a class="nav-link position-relative" th:href="@{/relation/getVarifyFriendPage}">好友验证<span class="badge badge-danger" id='allVarifyFriendCount'></span></a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link position-relative" th:href="@{/relation/getVarifyGroupPage}">群聊通知<span class="badge badge-danger" id='allVarifyFriendCount'></span></a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link position-relative active" th:href="@{/user/getSystemAdvicePage}">系统通知<span class="badge badge-danger" id='allSystemAdviceCount'></span></a>
+						</li>
+					</ul>
+				</div>
+
+				<!-- 通知列表 -->
+				<ul class="list-unstyled">
+					<!--评论-->
+					<li class="media pb-3 pt-3 mb-3 border-bottom position-relative">
+						<span class="badge badge-danger" id="varCommentCount"></span>
+						<img src="http://static.nowcoder.com/images/head/reply.png" class="mr-4 user-header" alt="通知图标">
+						<div class="media-body">
+							<h6 class="mt-0 mb-3">
+								<span><a th:href="@{/message/getAdviceByTopic(topic=comment)}">评论</a></span>
+							</h6>
+							<div>
+								<a id="lastCommenter"></a>
+								<ul class="d-inline font-size-12 float-right">
+									<li class="d-inline ml-2"><span class="text-primary">共 <i id="allCommentSessionCount">3</i> 条会话</span></li>
+								</ul>
+							</div>
+						</div>
+					</li>
+					<!--点赞-->
+					<li class="media pb-3 pt-3 mb-3 border-bottom position-relative">
+						<span class="badge badge-danger" id="varLikeCount"></span>
+						<img src="http://static.nowcoder.com/images/head/like.png" class="mr-4 user-header" alt="通知图标">
+						<div class="media-body">
+							<h6 class="mt-0 mb-3">
+								<span><a th:href="@{/message/getAdviceByTopic(topic=like)}">点赞</a></span>
+							</h6>
+							<div>
+								<a id="lastLiker"></a>
+								<ul class="d-inline font-size-12 float-right">
+									<li class="d-inline ml-2"><span class="text-primary">共 <i id="allLikeSessionCount">3</i> 条会话</span></li>
+								</ul>
+							</div>
+						</div>
+					</li>
+					<!--回复-->
+					<li class="media pb-3 pt-3 mb-3 border-bottom position-relative">
+						<span class="badge badge-danger" id="varReplyCount"></span>
+						<img src="http://static.nowcoder.com/images/head/follow.png" class="mr-4 user-header" alt="通知图标">
+						<div class="media-body">
+							<h6 class="mt-0 mb-3">
+								<span><a th:href="@{/message/getAdviceByTopic(topic=reply)}">回复</a></span>
+							</h6>
+							<div>
+								<a id="lastReplyer"></a>
+								<ul class="d-inline font-size-12 float-right">
+									<li class="d-inline ml-2"><span class="text-primary">共 <i id="allReplySessionCount">3</i> 条会话</span></li>
+								</ul>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<!--<script th:src="@{/js/global.js}"></script>-->
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+        var cmtCount = 0;
+        var replyCount = 0;
+        var likeCount = 0;
+
+
+
+        //异步获取未读系统通知数量
+        function getUnreadedSystemAdviceCount() {
+            //异步获取所有评论数量
+            $.ajax({
+                url:'/qq_system/message/getAllUnreadCount?topic=comment',
+                success:function (data) {
+                    if(data=='0'){
+                        $("#varCommentCount").hide();
+                    }else{
+                        $("#varCommentCount").text(data);
+                        $("#varCommentCount").show();
+                    }
+                    cmtCount = parseInt(data)
+                }
+            });
+            //异步获取所有回复数量
+            $.ajax({
+                url:'/qq_system/message/getAllUnreadCount?topic=reply',
+                success:function (data) {
+                    if(data=='0'){
+                        $("#varReplyCount").hide();
+                    }else{
+                        $("#varReplyCount").text(data);
+                        $("#varReplyCount").show();
+                    }
+                    replyCount = parseInt(data)
+                }
+            });
+            //异步获取所有点赞数量
+            $.ajax({
+                url:'/qq_system/message/getAllUnreadCount?topic=like',
+                success:function (data) {
+                    if(data=='0'){
+                        $("#varLikeCount").hide();
+                    }else{
+                        $("#varLikeCount").text(data);
+                        $("#varLikeCount").show();
+                    }
+                    likeCount = parseInt(data)
+                }
+            });
+            return cmtCount+replyCount+likeCount;
+        }
+
+        //异步获取所有系统通知数量
+        function getAllSystemAdviceCount() {
+            //异步获取所有评论数量
+            $.ajax({
+                url:'/qq_system/message/getReadAndUnreadMsgCount?topic=comment',
+                success:function (data) {
+					$("#allCommentSessionCount").text(data);
+                }
+            });
+            //异步获取所有回复数量
+            $.ajax({
+                url:'/qq_system/message/getReadAndUnreadMsgCount?topic=reply',
+                success:function (data) {
+                    $("#allReplySessionCount").text(data);
+                }
+            });
+            //异步获取所有点赞数量
+            $.ajax({
+                url:'/qq_system/message/getReadAndUnreadMsgCount?topic=like',
+                success:function (data) {
+                    $("#allLikeSessionCount").text(data);
+                }
+            });
+        }
+
+        //异步显示最新的一条通知
+		function showLastAdvice() {
+            $.ajax({//异步获取最新评论通知
+                url:'/qq_system/message/getLastAdviceByTopic?topic=comment',
+                success:function (data) {
+                    if(data!=''){
+                        res = JSON.parse(data);
+                        $("#lastCommenter").text("用户"+res.senderUserName+"评论了你");
+                    }else{
+                        $("#lastCommenter").text("");
+					}
+                }
+            });
+            $.ajax({//异步获取最新回复通知
+                url:'/qq_system/message/getLastAdviceByTopic?topic=reply',
+                success:function (data) {
+                    if(data!=''){
+                        res = JSON.parse(data);
+                        $("#lastReplyer").text("用户"+res.senderUserName+"回复了你");
+					}else{
+                        $("#lastReplyer").text("");
+					}
+                }
+            });
+            $.ajax({//异步获取最新点赞通知
+                url:'/qq_system/message/getLastAdviceByTopic?topic=like',
+                success:function (data) {
+                    if(data!=''){
+                        res = JSON.parse(data);
+                        if(res.comment=='1'){
+                            $("#lastLiker").text("用户"+res.senderUserName+"点赞了你的言论");
+						}else{
+                            $("#lastLiker").text("用户"+res.senderUserName+"取消了对你的言论的点赞");
+						}
+					}else{
+                        $("#lastLiker").text("");
+					}
+                }
+            });
+        }
+
+
+        setInterval(function () {
+
+            //实时获取最新通知信息
+            showLastAdvice();
+
+            //实时获取所有系统通知数量
+            getAllSystemAdviceCount();
+
+            //实时获取未读系统通知数量
+            var cnt = getUnreadedSystemAdviceCount();
+            if(cnt==0){
+                $("#allSystemAdviceCount").hide();
+            }else{
+                $("#allSystemAdviceCount").text(cnt);
+                $("#allSystemAdviceCount").show();
+            }
+
+            //实时获取好友验证数量
+            $.ajax({
+                url:'/qq_system/relation/getAllVarifyFriend',
+                success:function (data) {
+                    if(data!=null&&data!="") {
+                        var friend_list = data.split(';');//好友列表
+                        $("#allVarifyFriendCount").text(friend_list.length);
+                        $("#allVarifyFriendCount").show();
+                    }
+                }
+            });
+
+        },100);
+	</script>
+
+</body>
+</html>

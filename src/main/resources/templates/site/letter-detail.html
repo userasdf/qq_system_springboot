@@ -1,0 +1,203 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<link rel="stylesheet" th:href="@{/css/letter.css}" />
+	<title>牛客网-私信详情</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<div id="app" class="main" style="padding-bottom: 2px;padding-top: 2px;">
+			<!--隐藏是否为群聊-->
+			<input id="isGroup" type="hidden" th:value="${isGroup}">
+			<div class="container" style="padding-bottom: 2px;width: 800px;margin-top: 2px;">
+				<div class="row" style="margin-bottom: 1px">
+					<div class="col-8">
+						<input type="hidden" id="user_id" th:value="${target.id}">
+						<h6 th:if="${isGroup==0}"><b class="square"></b> 正在与 <a th:href="@{/user/profile(id=${target.id})}" class="text-success" th:utext="${target.username}"></a> 对话</h6>
+						<h6 th:if="${isGroup==1}"><b class="square"></b> 群聊： <a th:href="@{/group/getGroupUserPage(groupId=${target.id})}" class="text-success" th:utext="${target.groupName}"></a></h6>
+					</div>
+				</div>
+				<!-- 私信列表 -->
+				<ul class="list-unstyled mt-4" id="message_list" style="border: 1px solid goldenrod;padding: 5px;margin-top:1px;margin-bottom:1px;height: 300px;overflow-y: scroll;">
+					<!--thymeleaf加载的标签-->
+					<div th:each="message:${messageList}">
+						<!--如果是群聊-->
+						<div th:style='|width: 500px;${message.fromId!=user.id?"float: left;":"float: right;"}|' class="toast show d-lg-block"
+							 role="alert" aria-live="assertive" aria-atomic="true">
+							<div class="toast-header">
+								<small th:text="${#dates.format(message.createTime,'yyyy-MM-dd HH:mm:ss')}"></small>
+							</div>
+							<div th:if="${message.topic} eq 'file'" class="toast-body" style='padding-top: 1px;padding-bottom: 1px'>
+								<span th:utext="${message.fromId}"></span>发的图片：<img width="200px;" th:src="${message.content}"/>
+							</div>
+							<div th:if="${message.topic} ne 'file'" class="toast-body" style='padding-top: 1px;padding-bottom: 1px'>
+								<span th:utext="${message.fromId}"></span>说的内容：<span th:utext="${message.content}"></span>
+							</div>
+						</div>
+					</div>
+					<!--vue加载的标签-->
+					<div v-for="message in messageList">
+						<div v-if="message.fromId!=userId" style='float: left;width: 500px' class="toast show d-lg-block"
+							 role="alert" aria-live="assertive" aria-atomic="true">
+							<div class="toast-header">
+								<small>{{message.createTime}}</small>
+							</div>
+							<div v-if="message.topic!=file" class="toast-body" style='padding-top: 1px;padding-bottom: 1px'>
+								<span>{{message.fromId}}</span>说的内容：<span >{{message.content}}</span>
+							</div>
+							<div v-if="message.topic==file" class="toast-body" style='padding-top: 1px;padding-bottom: 1px'>
+								<span>{{message.fromId}}</span>发的图片：<img width="200px;"  :src="message.content"></img>
+							</div>
+						</div>
+						<div v-if="message.fromId==userId" style='float: right;width: 500px' class="toast show d-lg-block"
+							 role="alert" aria-live="assertive" aria-atomic="true">
+							<div class="toast-header">
+								<small>{{message.createTime}}</small>
+							</div>
+							<div v-if="message.topic!=file" class="toast-body" style='padding-top: 1px;padding-bottom: 1px'>
+								<span>{{message.fromId}}</span>说的内容：<span >{{message.content}}</span>
+							</div>
+							<div v-if="message.topic==file" class="toast-body" style='padding-top: 1px;padding-bottom: 1px'>
+								<span>{{message.fromId}}</span>发的图片：<img width="200px;"  :src="message.content"></img>
+							</div>
+						</div>
+					</div>
+
+
+				</ul>
+				<!-- 发送消息 -->
+				<div class="modal-body" method="post" style="padding-top: 2px;padding-bottom: 2px;margin-top: 2px;">
+					<textarea class="form-control" style="height: 75px" id="message-text" rows="10"></textarea>
+					<div class="modal-footer" style="padding: 0px">
+						<input type="file" id="file">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="clear_text()">清空</button>
+						<button th:if="${isGroup==0}" type="submit" class="btn btn-primary" id="sendBtn" onclick="send_msg_to_friend(0)">发送</button>
+						<button th:if="${isGroup==1}" type="submit" class="btn btn-primary" id="sendBtn" onclick="send_msg_to_friend(1)">发送</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+	<!--<script th:src="@{/js/global.js}"></script>-->
+	<script>
+
+        var messageList = []//weosocket方式读取的消息
+        var userId = $("#userId").val();//当前用户id
+        var toId = $("#user_id").val();//群聊或好友id
+		var isGroup = $("#isGroup").val();//判断当前页面是否为群聊页面
+
+        var isScrollTo = 10;//是否滑动到低端
+
+        var websocket;
+        if ('WebSocket' in window) {
+            websocket = new WebSocket("ws://" + document.location.host + "/qq_system/imserver/"+userId+"_"+toId);
+        } else if ('MozWebSocket' in window) {
+            websocket = new MozWebSocket("ws://" + document.location.host + "/qq_system/imserver/"+userId+"_"+toId);
+        } else {
+            websocket = new SockJS("http://" + document.location.host + "/qq_system/imserver/sockjs/"+userId+"_"+toId);
+        }
+        //连接成功
+        websocket.onopen = function(evnt) {
+            // console.info(evnt.data)
+        };
+        //收到消息
+        websocket.onmessage = function(evnt) {
+            var message = JSON.parse(evnt.data);
+            message.createTime = new Date(message.createTime);
+            message.createTime = formatTime(message.createTime);
+            messageList.push(message);
+            isScrollTo = 10;
+        };
+
+
+        function formatTime(time) {
+            var year = time.getFullYear();
+            var month = time.getMonth() + 1;
+            var dates = time.getDate();
+            var day = time.getDay();
+            var hour = time.getHours();
+            hour = hour < 10 ? '0' + hour : hour;
+            var minute = time.getMinutes();
+            minute = minute < 10 ? '0' + minute : minute;
+            var second = time.getSeconds();
+            second = second < 10 ? '0' + second : second;
+            return year + '-' + month + '-' + dates + '-\t' + hour + ':' + minute + ':' + second + '\t';
+        }
+
+		setInterval(function () {
+			if(isScrollTo>0){
+                //将消息滚动到底部
+                var $ul = $("#message_list");
+                $ul.scrollTop(99999999);
+                isScrollTo -= 2;
+			}
+        },100);
+
+		function clear_text() {
+            $("#message-text").val("");
+            $("#file").val("");//设置为空
+        }
+
+        function send_msg_to_friend(isGroup) {
+            var flag = false;//判断最后是否需要提示
+            //先发送消息
+            var fromId = userId;
+            var content = $("#message-text").val();
+            if(content!=null&&content!=""){
+                var msg = {"fromId":fromId,"toId":toId,"content":content,"topic":"msg","isGroup":isGroup};
+                websocket.send(JSON.stringify(msg));//向服务端发送消息
+                flag = true;
+            }
+            //后发送文件
+            var files = document.querySelector("#file").files;
+            if(files.length>0){
+                var fileReader = new FileReader();
+                fileReader.readAsDataURL(files[0]);
+                fileReader.onload = function (ev) {
+                    var msg = {"fromId":fromId,"toId":toId,"content":ev.target.result,"topic":"file","isGroup":isGroup};
+                    websocket.send(JSON.stringify(msg));//向服务端发送消息
+                }
+                flag = true;
+            }
+            clear_text();
+            if(!flag){
+                alert("请输入文字或选择图片！")
+            }
+        }
+
+
+        var vue = new Vue({
+            el:"#app",
+            data:{
+                messageList:messageList,
+				userId:userId,
+				file:"file"
+            }
+        })
+
+
+
+
+	</script>
+</body>
+</html>

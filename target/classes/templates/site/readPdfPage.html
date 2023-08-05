@@ -1,0 +1,77 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<link rel="stylesheet" th:href="@{/css/login.css}" />
+	<title>牛客网-读取文档</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header"></header>
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container" style="width: 100%">
+				<!-- 读取文档 -->
+				<h6>
+					<b class="square"></b>读取文档
+					<input type="button" value="返回" onclick="closeAndExit()"/>
+				</h6>
+
+				<form method="post" th:action="@{/file/saveTxt}">
+					<!--隐藏的是否是绝对路径-->
+					<input type="hidden" name="isAbsolutePath" id="isAbsolutePath" th:value="${isAbsolutePath}">
+					<div style="display: flex">
+						<span style="width: 100px;">当前目录：</span>
+						<input style="width: 100%" id="tempDir" readonly="readonly" type="text" name="tempDir" th:value="${tempDir}"/>
+					</div>
+					<div style="display: flex">
+						<span style="width: 100px;padding: 0px;margin: 0px;">文件名称：</span>
+						<input style="width: 100%" id="fileName" readonly="readonly" type="text" name="fileName" th:value="${fileName}"/>
+					</div>
+
+					<div class="form-group"  style="display: flex">
+						<div id="pdf" style="height: 400px;width: 100%;"/>
+					</div>
+				</form>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bs-custom-file-input.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/index.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+	<script th:src="@{/js/pdfobject.js}" type="text/javascript" charset="utf-8"></script>
+	<script>
+        window.onload = function (){
+
+            var isAbsolutePath = $("#isAbsolutePath").val().toString();
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            //获取文件名
+            var file_name = $("#fileName").val();
+
+            var url = "/qq_system/file/readPDF?tempDir="+temp_dir+"&fileName="+file_name+"&isAbsolutePath="+isAbsolutePath;
+            var success = new PDFObject({ url: url }).embed("pdf");
+        };
+
+        //关闭文本
+        function closeAndExit() {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            var isAbsolutePath = $("#isAbsolutePath").val();
+            location.href = "/qq_system/index?tempDir="+temp_dir+"&isAbsolutePath="+isAbsolutePath;
+        }
+	</script>
+</body>
+</html>

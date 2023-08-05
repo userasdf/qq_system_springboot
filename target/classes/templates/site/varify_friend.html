@@ -1,0 +1,105 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-好友验证</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+
+			<div class="container" id="varifyList">
+
+				<h6><b class="square"></b>通知</h6>
+				<div class="position-relative">
+					<!-- 选项 -->
+					<ul class="nav nav-tabs mb-3">
+						<li class="nav-item">
+							<a class="nav-link position-relative active" th:href="@{/relation/getVarifyFriendPage}">好友验证<span th:text="${allVarifyFriendCount}" class="badge badge-danger" id='allVarifyFriendCount'></span></a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link position-relative" th:href="@{/relation/getVarifyGroupPage}">群聊通知<span th:text="${joinGroupApplyCount}" class="badge badge-danger" id='allVarifyFriendCount'></span></a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link position-relative" th:href="@{/user/getSystemAdvicePage}">系统通知<span class="badge badge-danger" id='allSystemAdviceCount'></span></a>
+						</li>
+					</ul>
+
+					<!--好友验证列表-->
+					<ul>
+						<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="varifyFriend : ${allVarifyFriend}">
+							<img th:src="@{${varifyFriend.headerUrl}}" style='width: 50px;' class="mr-4 rounded-circle" alt="用户头像">
+							<div  class="media-body">
+								<div class="text-muted font-size-12" style="font-size: 20px;">
+									<u class="mr-3"><span th:utext="${varifyFriend.username}"></span></u>
+									<ul  class="d-inline float-right">
+										<button class="d-inline ml-2" th:onclick="'accept('+${varifyFriend.id}+')'" >同意</button>
+										<button class="d-inline ml-2" th:onclick="'reject('+${varifyFriend.id}+')'" >拒绝</button>
+									</ul>
+									<div>
+										<span style='color: red'>验证消息：</span>
+										<span th:utext="${varifyFriend.valMsg}"></span>
+									</div>
+								</div>
+							</div>
+						</li>
+					</ul>
+				</div>
+
+
+
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<!--<script th:src="@{/js/global.js}"></script>-->
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+
+
+
+        //同意好友申请
+        function accept(user_id) {
+
+            var choose = confirm("是否确认接受好友申请？")
+            if(choose){
+                $.ajax({
+                    url:"/qq_system/relation/acceptFriend/"+user_id,
+                });
+                location.reload();
+			}
+        }
+
+        //拒绝好友申请
+		function reject(user_id) {
+            var choose = confirm("是否拒绝该用户？")
+            if(choose){
+                $.ajax({
+                    url:"/qq_system/relation/rejectFriend/"+user_id,
+                });
+                location.reload();
+            }
+        }
+
+
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<link rel="stylesheet" th:href="@{/css/login.css}" />
+	<title>牛客网-账号设置</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header"></header>
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container" style="width: 100%" th:if="${tempUser==null}">
+				<!-- 个人信息 -->
+				<h6><b class="square"></b>个人信息</h6>
+				<form method="post" th:action="@{/user/updateInfo}">
+					<div class="form-group"  style="display: flex">
+						<span style="width: 50px;">用户<br/>昵称</span>
+						<input style="width: 100%;background-color: #aaadcd" readonly="readonly" id="username" th:value="${user.username}">
+						<input class="btn" type="button" disabled="disabled"
+								style="background-color: gray;border: 2px solid yellow;margin-left: 5px;" value="只读">
+					</div>
+					<div class="form-group"  style="display: flex">
+						<span style="width: 50px;">创建<br/>时间</span>
+						<input style="width: 100%;background-color: #aaadcd" readonly="readonly" id="createTime"  th:value="${#dates.format(user.createTime,'yyyy-MM-dd,HH:mm:ss')}">
+						<input class="btn" type="button" disabled="disabled"
+							   style="background-color: gray;border: 2px solid yellow;margin-left: 5px;" value="只读">
+					</div>
+					<div class="form-group"  style="display: flex">
+						<span style="width: 50px;">个性<br/>签名</span>
+						<input style="width: 100%" id="info" name="info" th:value="${user.personalLabel}">
+						<input class="btn" type="button" onclick="emptyData('info')" style="background-color: green;border: 2px solid blue;margin-left: 5px;" value="清空">
+					</div>
+					<div class="form-group"  style="display: flex">
+						<span style="width: 50px;">用户<br/>年龄</span>
+						<input style="width: 100%" id="age" name="age" th:value="${user.age}">
+						<input class="btn" type="button" onclick="emptyData('age')" style="background-color: green;border: 2px solid blue;margin-left: 5px;" value="清空">
+					</div>
+					<div class="form-group"  style="display: flex">
+						<span style="width: 50px;">毕业<br/>学校</span>
+						<input  style="width: 100%" id="school" name="school" th:value="${user.school}">
+						<input class="btn" type="button" onclick="emptyData('school')" style="background-color: green;border: 2px solid blue;margin-left: 5px;" value="清空">
+					</div>
+					<div class="form-group"  style="display: flex">
+						<span style="width: 50px;">通信<br/>地址</span>
+						<input style="width: 100%" id="address" name="address" th:value="${user.address}">
+						<input class="btn" type="button" onclick="emptyData('address')" style="background-color: green;border: 2px solid blue;margin-left: 5px;" value="清空">
+					</div>
+					<div class="form-group"  style="display: flex">
+						<span style="width: 50px;">绑定<br/>邮箱</span>
+						<input style="width: 100%" id="email" name="email" th:value="${user.email}">
+						<input class="btn" type="button" onclick="emptyData('email')" style="background-color: green;border: 2px solid blue;margin-left: 5px;" value="清空">
+					</div>
+
+
+					<div class="form-group"  style="display: flex">
+						<button type="reset" class="btn btn-info text-white form-control" style="width: 100%;margin-right: 15px;" >重置</button>
+						<input class="btn btn-info text-white form-control" style="width: 100%;margin-right: 15px;" type="button" value="刷新" onclick="location.reload()">
+						<button type="submit" class="btn btn-info text-white form-control" style="width: 100%;">保存</button>
+					</div>
+				</form>
+			</div>
+			<!--查看他人信息-->
+			<div class="container" style="width: 100%" th:if="${tempUser!=null}">
+				<!-- 个人信息 -->
+				<h6><b class="square"></b>查看他人信息</h6>
+				<div class="form-group"  style="display: flex">
+					<span style="width: 50px;">用户<br/>昵称</span>
+					<input style="width: 100%;background-color: #aaadcd" readonly="readonly" id="username" name="username" th:value="${tempUser.username}">
+				</div>
+				<div class="form-group"  style="display: flex">
+					<span style="width: 50px;">创建<br/>时间</span>
+					<input style="width: 100%;background-color: #aaadcd" readonly="readonly" id="createTime"  th:value="${#dates.format(tempUser.createTime,'yyyy-MM-dd,HH:mm:ss')}">
+				</div>
+				<div class="form-group"  style="display: flex">
+					<span style="width: 50px;">激活<br/>状态</span>
+					<input  style="width: 100%;" readonly="readonly" id="status" name="status" th:value="${tempUser.status}">
+				</div>
+				<div class="form-group"  style="display: flex">
+					<span style="width: 50px;">个性<br/>签名</span>
+					<input style="width: 100%" id="info" name="info" readonly="readonly" th:value="${tempUser.personalLabel}">
+				</div>
+				<div class="form-group"  style="display: flex">
+					<span style="width: 50px;">用户<br/>年龄</span>
+					<input style="width: 100%" id="age" name="age" readonly="readonly" th:value="${tempUser.age}">
+				</div>
+				<div class="form-group"  style="display: flex">
+					<span style="width: 50px;">毕业<br/>学校</span>
+					<input  style="width: 100%" id="school" name="school" readonly="readonly" th:value="${tempUser.school}">
+				</div>
+				<div class="form-group"  style="display: flex">
+					<span style="width: 50px;">通信<br/>地址</span>
+					<input style="width: 100%" id="address" name="address" readonly="readonly" th:value="${tempUser.address}">
+				</div>
+				<div class="form-group"  style="display: flex">
+					<span style="width: 50px;">绑定<br/>邮箱</span>
+					<input style="width: 100%" id="email" name="email" readonly="readonly" th:value="${tempUser.email}">
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bs-custom-file-input.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/global.js}"></script>
+	<script th:src="@{/js/clipboard.min.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+
+        //复制功能
+        new ClipboardJS(document.getElementById("copy"));
+
+        //清空文本框
+        function emptyData(id) {
+            $("#"+id).val('');
+        }
+
+		$(function(){
+			bsCustomFileInput.init();
+		});
+	</script>
+</body>
+</html>

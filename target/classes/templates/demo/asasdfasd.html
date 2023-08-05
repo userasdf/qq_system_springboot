@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="copyId">
+    水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水水
+    水水水水水水水水水水水水水水水水水水水水水水水水水
+</div>
+<button type="button" onclick="copy()"></button>
+<script>
+    function copy() {
+        var val = document.getElementById('copyId');
+        window.getSelection().selectAllChildren(val);
+        document.execCommand("Copy");
+    }
+</script>
+</body>
+</html>

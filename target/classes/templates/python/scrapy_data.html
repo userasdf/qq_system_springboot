@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>爬取数据</title>
+    <style>
+        .div{
+            margin:0 auto; width:500px; height:auto;
+            padding-bottom: 0px;
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="div">
+        <form style="border: 1px solid red;margin-top: 50px;" method="post" th:action="@{/file/scrapyData}" onsubmit="return checkInput()">
+            <!--隐藏当前目录-->
+            <input type="hidden" name="tempDir" id="tempDir" th:value="${tempDir}">
+            <p>用户：<input style="font-size: 30px;" type="text" name="userName" id="userName"></p>
+            <button type="submit" style="font-size: 30px;">爬取抖音</button>
+        </form>
+
+        <form style="border: 1px solid red;margin-top: 50px;" method="post" th:action="@{/file/scrapyBiliBiliData}" onsubmit="return checkBibiliInput()">
+            <!--隐藏当前目录-->
+            <input type="hidden" name="tempDir" th:value="${tempDir}">
+            <p>用户：<input style="font-size: 30px;" type="text" name="userName" id="bilibiliUserName"></p>
+            <p>地址：<input style="font-size: 30px;" type="text" name="url" id="url"></p>
+            <button type="submit" style="font-size: 30px;">爬取哔站</button>
+        </form>
+
+        <form style="border: 1px solid red;margin-top: 50px;" method="post" th:action="@{/file/scrapyDouyinByUrl}" onsubmit="return checkDouyinInput()">
+            <!--隐藏当前目录-->
+            <input type="hidden" name="tempDir" th:value="${tempDir}">
+            <p>地址：<input style="font-size: 30px;" type="text" name="url" id="douyinUrl"></p>
+            <button type="submit" style="font-size: 30px;">爬取抖音当前视频</button>
+        </form>
+    </div>
+
+</body>
+<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+<script>
+
+
+    //爬取
+    function checkInput() {
+
+        var userName = $("#userName").val();
+
+        if(userName==null||userName.length==0){
+            alert("输入框不能为空！");
+            return false;
+        }else{
+            return true;
+        }
+
+    }
+
+    function checkBibiliInput() {
+        var userName = $("#bilibiliUserName").val()
+        var url = $("#url").val()
+        if(url==null||url.length==0||userName==null||userName.length==0){
+            alert("输入框不能为空！")
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    function checkDouyinInput() {
+        var url = $("#douyinUrl").val()
+        if(url==null||url.length==0||userName==null||userName.length==0){
+            alert("输入框不能为空！")
+            return false;
+        }else{
+            return true;
+        }
+    }
+</script>
+</html>

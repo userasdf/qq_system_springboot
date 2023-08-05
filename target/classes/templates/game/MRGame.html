@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>战争游戏</title>
+    <style>
+        #container{
+            border: 4px solid red;
+            width: 1000px;
+            height: 500px;
+            position: relative;
+            margin-top: 40px;
+            margin-left: 120px;
+            padding-left: 0px;
+        }
+        .row{
+            position: absolute;
+            border: 2px solid red;
+            width: 996px;
+            height: 0px;
+        }
+        .col{
+            position: absolute;
+            border: 2px solid red;
+            width: 0px;
+            height: 496px;
+        }
+        .qizi{
+            width: 90px;
+            height: 70px;
+            padding: 0px;
+            border: 1px solid gray;
+            background-color: gray;
+            position: absolute;
+        }
+        .tip_top{
+            padding: 0px;
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 65px solid green;
+        }
+        .tip_bottom{
+            padding: 0px;
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 65px solid green;
+        }
+        .tip_left{
+            padding: 0px;
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 25px solid transparent;
+            border-bottom: 25px solid transparent;
+            border-right: 65px solid green;
+        }
+        .tip_right{
+            padding: 0px;
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 25px solid transparent;
+            border-bottom: 25px solid transparent;
+            border-left: 65px solid green;
+        }
+        #msg{
+            border: 1px solid green;
+            margin-left: 40%;
+            margin-top: 0px;
+            width: 600px;
+            height: 30px;
+        }
+    </style>
+
+</head>
+<body>
+<button onclick="history.back()">返回</button>
+<span id="msg"></span>
+<!--容器-->
+<div id="container"></div>
+<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+<script>
+
+
+    ri_left = 0;
+    guo_left = 0;
+    hui_left = 0;
+    setInterval(function () {
+        temp_ri = temp_guo = temp_hui = 0;
+        for(i=0;i<4;i++)
+            for(j=0;j<7;j++)
+            {
+                if($("#"+j+"_"+i).css("background-color")=="rgb(128, 128, 128)")
+                {
+                    temp_hui += 1;
+                }
+                if($("#"+j+"_"+i).attr("title")!=undefined){
+                    group = $("#"+j+"_"+i).attr("title").split(",")[1];
+                    if(group=="ri")
+                        temp_ri += 1;
+                    else
+                        temp_guo += 1;
+                }
+            }
+        ri_left = temp_ri+ri_name.length;
+        guo_left = temp_guo+guo_name.length;
+        hui_left = temp_hui;
+        $("#msg").text("国军剩余人数："+guo_left+",日军剩余人数："+ri_left+",剩余灰色棋子："+hui_left)
+    },10);
+
+
+    player_group = null;
+    robot_group = null;
+
+    is_robot_enable = false;//关闭人工智能
+
+    //机器人下棋
+    //一共两个动作
+    //显示一张棋子、移动一张棋子(普通移动，攻击棋子，背棋子)
+    function robot() {
+        if(!is_robot_enable)
+            return;
+        rdm = parseInt(Math.random()*6);//随机选择动作
+        if(rdm<3){//显示一张棋子
+            is_success = robot_show_qizi();
+            if(!is_success)
+                robot_move_qizi("guo")
+        }else{
+            is_success = robot_move_qizi("guo");
+            if(!is_success)
+                robot_show_qizi();
+        }
+    }
+
+    //机器人显示一张棋子
+    function robot_show_qizi() {
+        if(hui_left==0)
+            return false;//没有灰色棋子，显示棋子失败！
+        //确定显示第几章灰色棋子
+        rdm = parseInt(Math.random()*hui_left);
+        temp = 0;
+        //遍历所有棋子
+        for(i=0;i<4;i++)
+            for(j=0;j<7;j++)
+                if($("#"+j+"_"+i).css("background-color")=="rgb(128, 128, 128)"){
+                    if(temp==rdm){
+                        $("#"+j+"_"+i).remove();
+                        create_random_qizi(j,i);
+                        return true;
+                    }else{
+                        temp += 1;
+                    }
+                }
+        return true;
+    }
+
+    //移动棋子
+    function robot_move_qizi(robot_group) {
+        //遍历所有棋子
+        for(i=0;i<4;i++)
+            for(j=0;j<7;j++)
+                if(is_able_opr($("#"+j+"_"+i))){
+                    $("#"+j+"_"+i).css("border","5px solid green");
+                    return true;
+                }
+        return false;
+    }
+
+    //让该棋子执行能够执行的操作，若不能执行返回false
+    function is_able_opr(temp) {
+        if(temp.attr("title")==undefined)
+            return false;
+        temp_x = parseInt(temp.attr("id").split("_")[0])
+        temp_y = parseInt(temp.attr("id").split("_")[1])
+        temp_level = parseInt(temp.attr("title").split(",")[0]);
+        temp_group = temp.attr("title").split(",")[1];
+        if(temp_x>0){//向左移动
+            if(position_state[temp_y][temp_x-1]==1)//如果左方有元素
+            {
+                target = $("#"+(temp_x-1)+"_"+temp_y);
+                if(target.css("background-color")=="rgb(128, 128, 128)"){//如果当前元素是灰色棋子
+                    //向左背棋子
+                    alert("向左背棋子")
+                    return true;
+                }else{
+                    target_level = parseInt(target.attr("title").split(",")[0]);
+                    target_group = target.attr("title").split(",")[1];
+                    if(target_group!=temp_group&&temp_level<=target_level)//如果不是自己人，并且等级比对方高
+                    {
+                        //向左攻击
+                        alert("向左攻击")
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                //向左移动提示
+                alert("向左移动");
+                return true;
+            }
+
+        }
+        if(temp_x<7){
+            if(position_state[temp_y][temp_x+1]==1)//如果左方有元素
+            {
+                target = $("#"+(temp_x+1)+"_"+temp_y);
+                if(target.css("background-color")=="rgb(128, 128, 128)"){//如果当前元素是灰色棋子
+                    //向左背棋子
+                    alert("向右背棋子")
+                    return true;
+                }else{
+                    target_level = parseInt(target.attr("title").split(",")[0]);
+                    target_group = target.attr("title").split(",")[1];
+                    if(target_group!=temp_group&&temp_level<=target_level)//如果不是自己人，并且等级比对方高
+                    {
+                        //向左攻击
+                        alert("向右攻击")
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                //向左移动提示
+                alert("向右移动");
+                return true;
+            }
+        }
+        if(temp_y>0){
+            if(position_state[temp_y-1][temp_x]==1)//如果左方有元素
+            {
+                target = $("#"+temp_x+"_"+(temp_y-1));
+                if(target.css("background-color")=="rgb(128, 128, 128)"){//如果当前元素是灰色棋子
+                    //向左背棋子
+                    alert("向上背棋子");
+                    return true;
+                }else{
+                    target_level = parseInt(target.attr("title").split(",")[0]);
+                    target_group = target.attr("title").split(",")[1];
+                    if(target_group!=temp_group&&temp_level<=target_level)//如果不是自己人，并且等级比对方高
+                    {
+                        //向左攻击
+                        alert("向上攻击");
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                //向左移动提示
+                alert("向上移动");
+                return true;
+            }
+        }
+        if(temp_y<5){
+            if(position_state[temp_y+1][temp_x]==1)//如果左方有元素
+            {
+                target = $("#"+temp_x+"_"+(temp_y+1));
+                if(target.css("background-color")=="rgb(128, 128, 128)"){//如果当前元素是灰色棋子
+                    //向左背棋子
+                    alert("向下背棋子")
+                    return true;
+                }else{
+                    target_level = parseInt(target.attr("title").split(",")[0]);
+                    target_group = target.attr("title").split(",")[1];
+                    if(target_group!=temp_group&&temp_level<=target_level)//如果不是自己人，并且等级比对方高
+                    {
+                        //向左攻击
+                        alert("向下攻击")
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                //向左移动提示
+                alert("向下移动");
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    top_list = new Array();
+    left_list = new Array();
+
+    choosed_qizi = null;//当前用户选择的棋子
+
+    //加载坐标
+    load_position_list();
+    function load_position_list() {
+        temp = -30;
+        for(i=0;i<6;i++){
+            top_list.push(temp+"px");
+            temp += 100;
+        }
+        temp = -45;
+        for(i=0;i<8;i++){
+            left_list.push(temp+"px");
+            temp += 143;
+        }
+    }
+
+    //创建网格
+    createGrid();
+    function createGrid() {
+        var temp = 0;
+        //画四行
+        for(i=0;i<4;i++){
+            temp += 100;
+            $_row = $("<div class='row'></div>").css("top",temp+"px");
+            $("#container").append($_row);
+        }
+        temp = 0;
+        //画六列
+        for(i=0;i<6;i++){
+            temp += 143;
+            $_col = $("<div class='col'></div>").css("left",temp+"px");
+            $("#container").append($_col);
+        }
+    }
+
+    //当前位置的状态：1代表该位置有棋子，0代表没有棋子
+    position_state = [
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0]
+    ]
+
+    //取消选中事件
+    function un_choosed() {
+        if(choosed_qizi==null)
+            return;
+        //下面的操作是取消选中步骤
+        x = parseInt(choosed_qizi.attr("id").split("_")[0]);
+        y = parseInt(choosed_qizi.attr("id").split("_")[1]);
+        choosed_qizi.css("border","none");
+        choosed_qizi = null;
+        if(x>0)
+        {
+            if(position_state[y][x-1]==1)
+                $("#"+(x-1)+"_"+y).css("border","none");
+            else
+            {
+                $("#"+(x-1)+"_"+y).remove();
+            }
+        }
+        if(x<7)
+        {
+            if(position_state[y][x+1]==1)
+                $("#"+(x+1)+"_"+y).css("border","none");
+            else
+            {
+                $("#"+(x+1)+"_"+y).remove()
+            }
+        }
+        if(y>0)
+        {
+
+            if(position_state[y-1][x]==1)
+                $("#"+x+"_"+(y-1)).css("border","none");
+            else
+            {
+                $("#"+x+"_"+(y-1)).remove()
+            }
+        }
+        if(y<5)
+        {
+            if(position_state[y+1][x]==1)
+                $("#"+x+"_"+(y+1)).css("border","none");
+            else
+            {
+                $("#"+x+"_"+(y+1)).remove()
+            }
+        }
+    }
+
+    //像某一个方向移动
+    function move(tag_div,x, y, dir) {
+        if(dir=="top"){
+            position_state[y][x] = 0;
+            position_state[y-1][x] = 1;
+            tag_div.attr("id",x+"_"+(y-1));
+            tag_div.animate({"top":top_list[y-1]},1500);
+        }else if(dir=="right"){
+            position_state[y][x] = 0;
+            position_state[y][x+1] = 1;
+            tag_div.attr("id",(x+1)+"_"+y);
+            tag_div.animate({"left":left_list[x+1]},1500);
+        }else if(dir=="bottom"){
+            position_state[y][x] = 0;
+            position_state[y+1][x] = 1;
+            tag_div.attr("id",x+"_"+(y+1));
+            tag_div.animate({"top":top_list[y+1]},1500);
+        }else{
+            position_state[y][x] = 0;
+            position_state[y][x-1] = 1;
+            tag_div.attr("id",(x-1)+"_"+y);
+            tag_div.animate({"left":left_list[x-1]},1500);
+        }
+    }
+
+    //创建一个棋子
+    function createQizi(name,flag,rank,level,x,y) {
+        group = "guo";//所在的阵营
+        if(flag=="rank/Japan_flag.png")
+            group = "ri";
+        var tag_div = $("<div  id='"+x+"_"+y+"' title='"+level+","+group+"' class='qizi'></div>");
+        tag_div.css("background-color","white").css("top",top_list[y]).css("left",left_list[x]);
+        /**************************/
+        tag_p = $("<p></p>").css("margin","0px");
+        tag_span = $("<span style='position: absolute;top: 0px;left: 3px'>"+name+"</span>");
+        tag_img_flag = $("<img src='/qq_system/game/getImage?fileName="+flag+"' width='35'height='20' style='position: absolute;top: 0px;right: 0px'>");
+        tag_p.append(tag_span).append(tag_img_flag);
+        tag_img_rank = $("<img src='/qq_system/game/getImage?fileName="+rank+"' width='90' height='50' style='position: absolute;top: 20px'>");
+        tag_div.append(tag_p).append(tag_img_rank);
+        /**************************/
+        $("#container").append(tag_div);
+        tag_div.click(function () {
+
+            if(tag_div.css("border")=="5px solid rgb(0, 0, 255)"){
+                attacker = choosed_qizi;
+                un_choosed();
+                attack(tag_div,attacker);
+                return;
+            }
+
+            if(choosed_qizi==tag_div){//如果用户选择该棋子
+                //调用取消选中棋子的方法
+                un_choosed();
+            }else{//用户未选择该棋子
+
+                if(choosed_qizi!=null){//如果用户选择了其他棋子
+                    un_choosed();
+                }
+                //当前用户选择该棋子
+                choosed_qizi = tag_div;
+                tag_div.css("border","5px dashed black");
+                //获取该棋子的信息
+                level = parseInt(tag_div.attr("title").split(",")[0]);
+                group = tag_div.attr("title").split(",")[1];
+                x = parseInt(tag_div.attr("id").split("_")[0]);
+                y = parseInt(tag_div.attr("id").split("_")[1]);
+
+                if(x>0)//向左
+                {
+                    if(position_state[y][x-1]==1)//如果左方有元素
+                    {
+                        target = $("#"+(x-1)+"_"+y);
+                        if(target.css("background-color")=="rgb(128, 128, 128)"){//如果当前元素是灰色棋子
+                            target.css("border","5px solid blue");
+                        }else{
+                            target_level = parseInt(target.attr("title").split(",")[0]);
+                            target_group = target.attr("title").split(",")[1];
+                            if(target_group!=group&&level<=target_level)//如果不是自己人，并且等级比对方高
+                                target.css("border","5px solid blue");
+                        }
+                    }
+                    else
+                    {
+                        //向左移动提示
+                        tag_tip = $("<div class='tip_left'></div>");
+                        tag_tip.attr("id",(x-1)+"_"+y);
+                        tag_tip.css("top",top_list[y]).css("left",left_list[x-1]);
+                        tag_tip.click(function () {
+                            //用户当前没有选择棋子
+                            un_choosed();
+                            move(tag_div,x, y, "left");
+                        });
+                        $("#container").append(tag_tip);
+                    }
+                }
+                if(x<7)
+                {
+                    if(position_state[y][x+1]==1)
+                    {
+                        target = $("#"+(x+1)+"_"+y);
+                        if(target.css("background-color")=="rgb(128, 128, 128)"){//如果当前元素是灰色棋子
+                            target.css("border","5px solid blue");
+                        }else{
+                            target_level = parseInt(target.attr("title").split(",")[0]);
+                            target_group = target.attr("title").split(",")[1];
+                            if(target_group!=group&&level<=target_level)//如果不是自己人，并且等级比对方高
+                                target.css("border","5px solid blue");
+                        }
+                    }
+                    else
+                    {
+                        //向右移动提示
+                        tag_tip = $("<div class='tip_right'></div>");
+                        tag_tip.attr("id",(x+1)+"_"+y);
+                        tag_tip.css("top",top_list[y]).css("left",left_list[x+1]);
+                        tag_tip.click(function () {
+                            //用户当前没有选择棋子
+                            un_choosed();
+                            move(tag_div,x, y, "right");
+                        });
+                        $("#container").append(tag_tip);
+                    }
+                }
+                if(y>0)
+                {
+                    if(position_state[y-1][x]==1)
+                    {
+                        target = $("#"+x+"_"+(y-1));
+                        if(target.css("background-color")=="rgb(128, 128, 128)"){//如果当前元素是灰色棋子
+                            target.css("border","5px solid blue");
+                        }else{
+                            target_level = parseInt(target.attr("title").split(",")[0]);
+                            target_group = target.attr("title").split(",")[1];
+                            if(target_group!=group&&level<=target_level)//如果不是自己人，并且等级比对方高
+                                target.css("border","5px solid blue");
+                        }
+                    }
+                    else
+                    {
+                        //向上移动提示
+                        tag_tip = $("<div class='tip_top'></div>");
+                        tag_tip.attr("id",x+"_"+(y-1));
+                        tag_tip.css("top",top_list[y-1]).css("left",left_list[x]);
+                        tag_tip.click(function () {
+                            //用户当前没有选择棋子
+                            un_choosed();
+                            move(tag_div,x, y, "top");
+                        });
+                        $("#container").append(tag_tip);
+                    }
+                }
+                if(y<5)
+                {
+                    if(position_state[y+1][x]==1)
+                    {
+                        target = $("#"+x+"_"+(y+1));
+                        if(target.css("background-color")=="rgb(128, 128, 128)"){//如果当前元素是灰色棋子
+                            target.css("border","5px solid blue");
+                        }else{
+                            target_level = parseInt(target.attr("title").split(",")[0]);
+                            target_group = target.attr("title").split(",")[1];
+                            if(target_group!=group&&level<=target_level)//如果不是自己人，并且等级比对方高
+                                target.css("border","5px solid blue");
+                        }
+                    }
+                    else
+                    {
+                        //向下移动提示
+                        tag_tip = $("<div class='tip_bottom'></div>");
+                        tag_tip.attr("id",x+"_"+(y+1));
+                        tag_tip.css("top",top_list[y+1]).css("left",left_list[x]);
+                        tag_tip.click(function () {
+                            //用户当前没有选择棋子
+                            un_choosed();
+                            move(tag_div,x, y, "bottom");
+                        });
+                        $("#container").append(tag_tip);
+                    }
+                }
+            }
+
+
+        });
+        return tag_div;
+    }
+
+    guo_name = new Array("上将","中将","少将","上校","中校","少校","上尉","中尉","少尉","上士","中士","少士","上等兵","一等兵","二等兵");
+    guo_rank = new Array("shang_jiang","zhong_jiang","shao_jiang",
+        "shang_xiao","zhong_xiao","shao_xiao",
+        "shang_wei","zhong_wei","shao_wei",
+        "shang_shi","zhong_shi","xia_shi",
+        "shang_deng_bing","yi_deng_bing","er_deng_bing");
+    guo_level = new Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+    ri_name = new Array("大将","中将","少将","大佐","中佐","少佐","大尉","中尉","少尉","上士","中士","少士","上等兵","一等兵","二等兵");
+    ri_rank = new Array("da_jiang","zhong_jiang","shao_jiang"
+        ,"da_zuo","zhong_zuo","shao_zuo"
+        ,"da_wei","zhong_wei","shao_wei"
+        ,"shang_shi","zhong_shi","xia_shi"
+        ,"shang_deng_bing","yi_deng_bing","er_deng_bing");
+    ri_level = new Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+    //随机生成一个棋子
+    function create_random_qizi(x,y) {
+        var name = null;
+        var rank = null;
+        var flag = null;
+        var level = null;
+
+        //确认是国军还是日军
+        var rdm = parseInt(Math.random()*10);
+        if(rdm<5){
+            if(guo_rank.length>0){//国军
+                flag = "rank/China_flag.png";//获取军旗路径
+                temp_index = parseInt(Math.random()*guo_rank.length);
+                name = guo_name[temp_index];//获取军衔名称
+                rank = "rank/Chinese/guo_"+guo_rank[temp_index]+".png";//获取军衔路径
+                level = guo_level[temp_index];//获取实际攻击力
+                guo_name.splice(temp_index,1);
+                guo_rank.splice(temp_index,1);
+                guo_level.splice(temp_index,1);
+            }else if(ri_rank.length>0){//日军
+                flag = "rank/Japan_flag.png";//获取军旗路径
+                temp_index = parseInt(Math.random()*ri_rank.length);
+                name = ri_name[temp_index];//获取军衔名称
+                rank = "rank/Japanese/ri_"+ri_rank[temp_index]+".png";//获取军衔路径
+                level = ri_level[temp_index];//获取实际攻击力
+                ri_name.splice(temp_index,1);
+                ri_rank.splice(temp_index,1);
+                ri_level.splice(temp_index,1);
+            }else{
+                return
+            }
+        }else{
+            if(ri_rank.length>0){//日军
+                flag = "rank/Japan_flag.png";//获取军旗路径
+                temp_index = parseInt(Math.random()*ri_rank.length);
+                name = ri_name[temp_index];//获取军衔名称
+                rank = "rank/Japanese/ri_"+ri_rank[temp_index]+".png";//获取军衔路径
+                level = ri_level[temp_index];//获取实际攻击力
+                ri_name.splice(temp_index,1);
+                ri_rank.splice(temp_index,1);
+                ri_level.splice(temp_index,1);
+            }else if(guo_rank.length>0){//国军
+                flag = "rank/China_flag.png";//获取军旗路径
+                temp_index = parseInt(Math.random()*guo_rank.length);
+                name = guo_name[temp_index];//获取军衔名称
+                rank = "rank/Chinese/guo_"+guo_rank[temp_index]+".png";//获取军衔路径
+                level = guo_level[temp_index];//获取实际攻击力
+                guo_name.splice(temp_index,1);
+                guo_rank.splice(temp_index,1);
+                guo_level.splice(temp_index,1);
+            }else{
+                return;
+            }
+        }
+        //生成棋子
+        return createQizi(name,flag,rank,level,x,y);
+    }
+
+    //攻击方法
+    function attack(temp, attacker) {
+        temp_level = parseInt(temp.attr("title").split(",")[0]);
+        temp_group = temp.attr("title").split(",")[1];
+        attacker_level = parseInt(attacker.attr("title").split(",")[0]);
+        attacker_group = attacker.attr("title").split(",")[1];
+
+        /****确定攻击的方向****/
+        dir = null;
+        temp_x = parseInt(temp.attr("id").split("_")[0]);//当前棋子的坐标
+        temp_y = parseInt(temp.attr("id").split("_")[1]);
+        attacker_x = parseInt(attacker.attr("id").split("_")[0]);//攻击者棋子的坐标
+        attacker_y = parseInt(attacker.attr("id").split("_")[1]);
+        /****确定攻击的方向****/
+
+        /*****判断队伍****/
+        if(temp_group==attacker_group){
+            return;
+        }
+        /*****判断队伍****/
+
+        //判断等级
+        if(temp_level<attacker_level){//攻击者等级太低
+            if(temp_x==attacker_x){
+                if(temp_y>attacker_y){
+                    dir = "top";
+                }else{
+                    dir = "bottom";
+                }
+            }else{
+                if(temp_x>attacker_x){
+                    dir = "left";
+                }else{
+                    dir = "right";
+                }
+            }
+            move(temp,temp_x,temp_y,dir);//当前棋子移动到攻击者位置
+            setTimeout(function () {
+                attacker.remove();//攻击者被反杀
+            },1300);
+        }else if(temp_level>attacker_level){//攻击者可以击毙当前棋子
+            if(temp_x==attacker_x){
+                if(temp_y>attacker_y){
+                    dir = "bottom";
+                }else{
+                    dir = "top";
+                }
+            }else{
+                if(temp_x>attacker_x){
+                    dir = "right";
+                }else{
+                    dir = "left";
+                }
+            }
+            move(attacker,attacker_x,attacker_y,dir);//攻击者移动到目标位置。
+            setTimeout(function () {
+                temp.remove();//移除当前棋子，相当于攻击者干掉该棋子
+            },1300);
+        }else{//用户判断是否可以同归于尽
+            setTimeout(function () {
+                var res = confirm("是否同归于尽！");
+                if(res) {
+                    temp.remove();
+                    attacker.remove();
+                    position_state[temp_y][temp_x] = 0;
+                    position_state[attacker_y][attacker_x] = 0;
+                }
+            },500);
+        }
+
+    }
+
+    //得分
+    function chooseQizi() {
+        $.ajax({
+            url:"/qq_system/game/chooseQizi"
+        });
+    }
+
+    //产生一个灰色棋子
+    function create_grey_qizi(x,y) {
+        var tag_div = $("<div id='"+x+"_"+y+"' class='qizi'></div>");
+        tag_div.css("border","none").css("background-color","grey").css("top",top_list[y]).css("left",left_list[x]);
+        tag_div.click(function () {//黑色棋子点击事件
+            if(tag_div.css("border")=="0px none rgb(0, 0, 0)"){//显示该棋子
+                tag_div.remove();//首先将黑色棋子移除
+                create_random_qizi(x,y);//然后随机产生一个具体的棋子
+                un_choosed()//用户显示棋子，肯定不会选择棋子
+                chooseQizi()
+            }else{//背该棋子
+                tag_div.remove();//首先将灰色棋子移除
+                temp = create_random_qizi(x,y);//然后随机产生一个具体的棋子
+                attacker = choosed_qizi;//获取攻击者
+                un_choosed();//用户显示棋子，肯定不会选择棋子
+                //执行攻击方法
+                attack(temp,attacker);
+            }
+            //玩家已经走完，该机器人走了
+            setTimeout(function () {
+                robot();
+            },500);
+
+        });
+        $("#container").append(tag_div);
+        //设置当前位置的状态为1，即有一个棋子
+        position_state[y][x] = 1;
+    }
+
+    //加载窗口时，加载完所有的棋子
+    for(i=0;i<4;i++)
+        for(j=0;j<7;j++)
+            create_grey_qizi(j,i);
+</script>
+</body>
+</html>

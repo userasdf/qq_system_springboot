@@ -1,0 +1,144 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>牛客网-个人主页</title>
+	<style>
+
+		body{
+			font-size: 20px;
+		}
+
+		#left{
+			width: 360px;
+			height: 240px;
+			float: left;
+			margin-left: 175px;
+		}
+		#right{
+			width: 400px;
+			height: 240px;
+			float: left;
+			margin-left: 100px;
+		}
+		#bottom{
+			float: left;
+			margin-left: 400px;
+			margin-top: 160px;
+		}
+		.btn{
+			font-size: 20px;
+		}
+		.bgColor{
+			background-color: goldenrod;
+		}
+		.p{
+			margin-bottom: 25px;
+			width: 400px;
+		}
+		.header{
+			font-size: 40px;
+		}
+	</style>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<form method="post" th:action="@{/user/updateInfo}"
+			  onsubmit="return check()" style="margin-top: 30px">
+			<div id="left">
+				<p class="p">
+					昵称：<input type="text" id="userName" readonly="readonly" name="userName" th:value="${user.username}">
+					<button class="btn bgColor" disabled="disabled" style="background-color: yellow;border: 2px solid blue">只读</button>
+				</p>
+				<p class="p">
+					年龄：<input type="text" id="age" name="age" th:value="${user.age}">
+					<input class="btn bgColor" type="button" onclick="emptyData('age')" value="清空">
+				</p>
+				<p class="p">
+					学校：<input type="text" id="school" name="school" th:value="${user.school}">
+					<input class="btn bgColor" type="button" onclick="emptyData('school')" value="清空">
+				</p>
+				<p class="p">
+					地址：<input type="text" id="address" name="address" th:value="${user.address}">
+					<input class="btn bgColor" type="button" onclick="emptyData('address')" value="清空">
+				</p>
+				<p class="p">
+					邮箱：<input type="text" id="email" name="email" th:value="${user.email}">
+					<input class="btn bgColor" type="button" onclick="emptyData('email')" value="清空">
+				</p>
+			</div>
+			<div id="right">
+				<p>
+					<textarea id="info" name="personalLabel" style="width: 330px;height: 320px" th:utext="${user.personalLabel}"></textarea>
+					<input id="copy" class="btn bgColor" type="button"  data-clipboard-target="#info"  value="复制">
+					<input class="btn bgColor" type="button" style="margin-left: 190px" onclick="emptyData('info')" value="清空">
+				</p>
+			</div>
+			<div id="bottom">
+				<p>
+					<input class="btn bgColor" type="reset" value="重置">
+					&nbsp;&nbsp;&nbsp;
+					<input class="btn bgColor" type="submit" style="background-color: red" value="更新">
+					&nbsp;&nbsp;&nbsp;
+					<input class="btn bgColor" type="button" value="刷新" onclick="location.reload()">
+				</p>
+			</div>
+
+		</form>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/index.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+	<script th:src="@{/js/clipboard.min.js}"></script>
+	<script>
+
+        //复制功能
+        new ClipboardJS(document.getElementById("copy"));
+
+
+        //清空文本框
+        function emptyData(id) {
+            $("#"+id).val('');
+        }
+
+        //提交检查
+        function check() {
+            if($("#userName").val()=='')
+            {
+                $("#userName").focus();
+                alert("用户名不能为空");
+                return false;
+            }
+            if($("#password").val()=='')
+            {
+                $("#password").focus();
+                alert("用户密码不能为空");
+                return false;
+            }
+            if($("#age").val()=='')
+            {
+                $("#age").focus();
+                alert("年龄不能为空！");
+                return false;
+            }
+            return true;
+        }
+
+	</script>
+</body>
+</html>

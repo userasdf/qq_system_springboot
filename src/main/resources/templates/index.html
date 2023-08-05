@@ -1,0 +1,659 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-首页</title>
+	<style>
+		.color{
+			color: red;
+			font-weight: bold;
+		}
+	</style>
+
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header id="header" class="bg-dark sticky-top" th:fragment="header">
+			<div class="container">
+				<!-- 导航 -->
+				<nav class="navbar navbar-expand-lg navbar-dark">
+					<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<!-- 功能 -->
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+						<ul class="navbar-nav mr-auto">
+							<li class="nav-item ml-3 btn-group-vertical">
+								<a class="nav-link" th:href="@{/index}">首页</a>
+							</li>
+							<li class="nav-item ml-3 btn-group-vertical">
+								<a class="nav-link" href="http://81.68.198.238:7788">游戏<span class="badge badge-danger" id="newFriendCircleCount"></span></a>
+							</li>
+							<li class="nav-item ml-3 btn-group-vertical">
+								<a class="nav-link" th:href="@{/relation/getFriendListPage(isGroup=0)}">
+									好友
+									<span v-for="item in unreadMsgCountFor" v-text="item" class="badge badge-danger"></span>
+								</a>
+							</li>
+							<li class="nav-item ml-3 btn-group-vertical">
+								<a class="nav-link" th:href="@{/relation/getFriendListPage(isGroup=1)}">
+									群聊<span class="badge badge-danger" id="varMsgCount"></span>
+								</a>
+							</li>
+							<li class="nav-item ml-3 btn-group-vertical">
+								<a class="nav-link" th:href="@{/relation/getVarifyFriendPage}">
+									通知<span v-for="item in adviceCountFor" v-text="item" class="badge badge-danger">
+								</span>
+								</a>
+							</li>
+							<li class="nav-item ml-3 btn-group-vertical">
+								<a class="nav-link" th:href="@{/user/getFriendCirclePage}">朋友圈<span class="badge badge-danger" id="newFriendCircleCount"></span></a>
+							</li>
+                            <li class="nav-item ml-3 btn-group-vertical">
+                                <a class="nav-link" th:href="@{/user/getOprLogs}">操作日志<span class="badge badge-danger" id="newFriendCircleCount"></span></a>
+                            </li>
+							<li class="nav-item ml-3 btn-group-vertical">
+								<a class="nav-link" th:href="@{/user/knowledgeGraph}">知识图谱<span class="badge badge-danger" id="newFriendCircleCount"></span></a>
+							</li>
+
+                            <li class="nav-item ml-3 btn-group-vertical dropdown">
+								<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									<img th:src="@{${user.headerUrl}}" class="rounded-circle" style="width:30px;height: 30px;"/>
+								</a>
+								<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+									<a class="dropdown-item text-center" th:href="@{/user/profile}">个人主页</a>
+									<a class="dropdown-item text-center" th:href="@{/user/getSettingPage}">账号设置</a>
+									<a class="dropdown-item text-center" th:href="@{/logout}">退出登录</a>
+									<div class="dropdown-divider"></div>
+									<input type="hidden" id="userId" th:value="${user.id}">
+									<span id="tempUserName" class="dropdown-item text-center text-secondary" th:utext="${user.username}">nowcoder</span>
+								</div>
+							</li>
+
+						</ul>
+						<!-- 搜索 -->
+						<form class="form-inline my-2 my-lg-0" th:action="@{/user/vagueSearchUserOrGroup}">
+							<input placeholder="默认查询所有记录" class="form-control mr-sm-2" type="search" name="name" aria-label="Search" />
+							<button class="btn btn-outline-light my-2 my-sm-0" type="submit">查找用户或群聊</button>
+						</form>
+					</div>
+				</nav>
+			</div>
+		</header>
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container" style="margin: auto;position: relative">
+
+				<h6><b class="square"></b>文件系统</h6>
+
+
+
+
+				<!-- 弹出框 -->
+				<div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalLabel" aria-hidden="true">
+
+
+
+
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="publishModalLabel">文件上传</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">
+								<div class="form-group">
+									<div>
+										<!--隐藏当前目录-->
+										<input type="hidden" id="tempDir" th:value="${tempDir}">
+										<input type="hidden" id="isAbsolutePath" th:value="${isAbsolutePath}">
+										<p style="display: flex">
+											<span style="width: 110px;">设置别名：</span>
+											<input style="width: 100%" id="fileName"
+												   type="text" placeholder="请输入文件名（可选）">
+										</p>
+										<div id="paste-target" style="border: 1px solid grey;" contenteditable>将文件粘贴此处</div>
+										<input id="uploadFile" style="width: 100%;" type="file">
+										<div class="modal-footer">
+											<span id="showProgress" hidden="hidden">
+												<div>
+													<span>状态:</span>
+													<span id="state"></span>
+												</div>
+												<div>
+													<progress max="100" value="0" id="progress1"></progress>
+													<span id="progress2"></span>
+												</div>
+												<div>
+													<span id="costTime"></span>
+												</div>
+											</span>
+											<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+											<button onclick="execUpload()"class="btn btn-primary">上传</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="font-size-12">
+					<span id="itemsCount"></span>
+					，排序方式：
+					<button id="sortName" onclick="clickName()">时间</button>
+					<button id="isAsc" onclick="clickSort()">降序</button>
+					<button style="padding: 2px;margin-bottom: 1px;font-size: 12px;" class="btn btn-primary" onclick="location.href='/qq_system/user/personalLink'">个人链接</button>
+					<div style="display: flex" th:if="${user.type==0}">
+						<button id="changePath" style="width: 110px;margin-right: 5px;" disabled="disabled">相对路径:</button>
+						<input id="temp_dir" readonly="readonly" style="width: 100%;background-color: #dcdadc" th:value="${tempDir}"></input>
+					</div>
+					<div style="display: flex" th:if="${user.type==1}">
+						<button id="changePath" style="width: 110px;margin-right: 5px;" onclick="changePath()" th:if="${isAbsolutePath eq '0'}">相对路径:</button>
+						<button id="changePath" style="width: 110px;margin-right: 5px;" onclick="changePath()" th:if="${isAbsolutePath eq '1'}">绝对路径:</button>
+						<input id="temp_dir"  style="width: 90%;background-color: #dcdadc;margin-right: 5px;" th:value="${tempDir}"></input>
+						<button onclick="getInto()" style="width: 60px;">转入</button>
+					</div>
+                </div>
+				<div class="font-size-12" id="btn_list" style="margin-bottom: 15px;margin-top: 2px;position: relative">
+					<button type='button' style="background-color: #37d2ff"
+					data-toggle='modal' data-target='#publishModal'>文件上传</button>
+					<input type="button" style="background-color: yellow" value="新文件夹" onclick="createFolder()">
+					<input type="button" style="background-color: green" value="新文件" onclick="createTxt()">
+					<input type="button" style="background-color: #e857d1" value="游戏" onclick="location.href='/qq_system/game/gameList'">
+					<input type="button" class="lastLevel" style="background-color: rgba(255,110,79,0.71);" value="上一级" onclick="backPreLevel()">
+					<input type="button" class="lastLevel" style="position: absolute;right: 0px;top:0px;background-color: rgba(255,110,79,0.71);" value="上一级" onclick="backPreLevel()">
+				</div>
+				<div id="file_list"></div>
+			</div>
+		</div>
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+
+
+		//是否是绝对路径
+		var isAbsolutePath = $("#isAbsolutePath").val();
+
+        //显示文件目录
+        show_content();
+
+		function getInto() {
+            //获取当前目录
+            var temp_dir = $("#temp_dir").val().toString().trim();
+            if($("#changePath").attr("disabled")=="disabled"){//非管理员用户，不能访问绝对路径
+                if(temp_dir==""||temp_dir=="/"){
+                    temp_dir = "/id_"+$("#userId").val();
+                    $("#temp_dir").val(temp_dir);
+				}
+			}
+            $("#tempDir").val(temp_dir);
+            show_content();
+        }
+
+
+        //获取粘贴对象
+		document.getElementById("paste-target").addEventListener('paste',function (ev) {
+		    ev.preventDefault();
+		    uploadFile = ev.clipboardData.items[0].getAsFile();
+		    $("#paste-target").text(uploadFile.name);
+		})
+
+        //文件上传
+        function execUpload() {
+            if(uploadFile==null){
+                const fileInput = document.getElementById("uploadFile");
+                uploadFile = fileInput.files[0];
+            }
+            if(uploadFile==null||uploadFile.length==0){
+                alert("请选择上传的文件！");
+                return;
+			}
+
+            //表单数据
+            const formData = new FormData();
+            formData.append('uploadFile',uploadFile);
+            formData.append("tempDir",$("#tempDir").val());
+            formData.append("fileName",$("#fileName").val());
+            formData.append("isAbsolutePath",$("#isAbsolutePath").val());
+
+            //显示上传进度
+            showProgress(uploadFile.size);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST","/qq_system/file/upload",true);
+            xhr.onload = function (ev) {
+                if(xhr.status===200){
+                    location.reload();
+                }else{
+                    alert("文件上传失败！");
+                }
+            }
+            xhr.upload.onprogress = function (ev) {
+                uploadProgress = Math.round((ev.loaded/ev.total)*100);
+            }
+            xhr.send(formData);
+        }
+
+        //上传文件耗时
+		var uploadFileCostTime = 0;
+		var uploadFile = null;
+		var uploadProgress = 0;
+		function startSaveTime() {
+		    uploadFileCostTime = 0;
+			setInterval(function () {
+				uploadFileCostTime += 1;
+            },1000);
+        }
+
+        function showProgress(fileSize) {
+
+            $("#showProgress").removeAttr("hidden")
+            startSaveTime();
+
+		    setInterval(function () {
+		        $.ajax({
+					url:"/qq_system/file/getUploadProgress",
+					success:function (data) {
+					    if(data==0){
+					        $("#state").text("正在请求服务器...");
+					        $("#progress1").val(uploadProgress);
+						}else{
+                            $("#state").text("上传中...");
+                            $("#progress1").val(data/fileSize*100);
+                            $("#progress2").text(convertByte(data)+"/"+convertByte(fileSize));
+						}
+                        $("#costTime").text("耗时："+uploadFileCostTime+"s");
+                    }
+				});
+            },10);
+        }
+
+        //字节转换成兆字节
+		function convertByte(fileSize) {
+			if(fileSize<1024)return fileSize.toFixed(2)+"B";
+			if(fileSize<1024*1024)return (fileSize/1024).toFixed(2)+"KB";
+			if(fileSize<1024*1024*1024)return (fileSize/(1024*1024)).toFixed(2)+"MB";
+			return (fileSize/(1024*1024*1024)).toFixed(2)+"GB";
+        }
+
+
+        function changePath() {
+			var pathType = $("#changePath").text();
+			if(pathType=="相对路径:"){
+                $("#changePath").text("绝对路径:");
+                $("#temp_dir").val('/root/qq_system/d:/work/data/qq_system_springboot/fileRoot')
+                $("#tempDir").val("/root/qq_system/d:/work/data/qq_system_springboot/fileRoot")
+                isAbsolutePath = 1;
+			}
+			else{
+                $("#changePath").text("相对路径:");
+                var relativePath = "/id_"+$("#userId").val();
+                $("#temp_dir").val(relativePath)
+				$("#tempDir").val(relativePath)
+                isAbsolutePath = 0;
+			}
+			$("#isAbsolutePath").val(isAbsolutePath);
+            show_content();
+        }
+
+
+
+		//显示当前文件夹中的内容
+        function show_content() {
+
+
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+			//排序方式
+			var sortName = $("#sortName").text();
+			//升序还是降序
+			var isAsc = $("#isAsc").text();
+
+
+			$.ajax({
+                type:"post",
+                url:"/qq_system/file/loadContent?tempDir="+temp_dir+"&sortName="+sortName+"&isAsc="+isAsc+"&isAbsolutePath="+isAbsolutePath,
+                contentType:"application/json;charset=utf-8",
+                success:function (data) {
+
+                    //清空容器
+                    $("#file_list").empty();
+                    file_names = data.split(';');//获取结果列表
+
+                    //如果是空记录
+                    if(file_names[0]=="空记录")
+                    {
+                        $("#itemsCount").text("共0个项目")
+                        $("#file_list").append($("<span style='color: red'>没有记录</span>"))
+                        return;
+                    }
+                    $("#itemsCount").text("共"+file_names.length+"个项目")
+                    //如果不是空记录
+                    for(i in file_names){//遍历内容
+                        file_name = file_names[i].split(',')[0];//文件或文件夹名字
+                        is_file = file_names[i].split(',')[1];//是否是文件
+                        //父标签
+                        var $tag_li = $("<p style='background-color: yellow;padding-top: 0px;'></p>");
+
+                        //主体信息
+                        var $div = $("<div class=\"media-body\"></div>")
+                        var $div_child = $("<div class=\"text-muted font-size-12\" style=\"display:flex;padding-bottom: 0px;\"></div>")
+
+						//文件或文件夹名字
+                        var $u = $("<input onmouseover=\"this.className='color'\" onmouseout=\"this.className=''\"  readonly='readonly' onclick=\""+"clickItems('"+file_name+"','"+is_file+"')"+"\" style='cursor: pointer;width: 100%;background-color: yellow;border: 1px solid yellow' value='"+file_name+"'></input>");
+                        //按钮列表
+                        var $ul_child = $("<ul style='width: 360px;padding: 0px;margin: 0px;'></ul>")
+                            // .append($("<button class=\"d-inline ml-2\" onclick=\"sendMsg()\" >发送消息</button>"))
+
+
+                        //按钮1：下载按钮
+                        var $down = $("<input type='button' value='下载' style='float: right;margin-left: 2px;'" +
+                            " onclick=\""+"downFile('"+file_name+"')"+"\"/>");
+
+                        if(is_file=='true'){//如果是文件
+                            $tag_li.css("background-color","#00FF00")
+                            $u.css("background-color","#00FF00")
+                            $u.css("border","1px solid #00FF00")
+                        }
+                        //按钮2：删除按钮
+                        var $delete = $("<input type='button' value='删除' style='float: right;margin-left: 2px;'" +
+                            " onclick=\""+"deleteItem('"+file_name+"')"+"\"/>");
+                        //按钮3：重命名按钮
+                        var $rename = $("<input type='button' value='重命名' style='float: right;margin-left: 2px;' " +
+                            " onclick=\""+"rename('"+file_name+"')"+"\"/>");
+                        //按钮4：复制
+                        var $copyDir = $("<input type='button' value='复制' style='float: right;margin-left: 2px;' " +
+                            " onclick=\""+"copyOrRemoveDir('"+file_name+"','"+"false"+"')"+"\"/>");
+                        //按钮5：移动
+                        var $removeDir = $("<input type='button' value='剪切' style='float: right;margin-left: 2px;' " +
+                            " onclick=\""+"copyOrRemoveDir('"+file_name+"','"+"true"+"')"+"\"/>");
+                        //按钮6：详细信息
+                        var $fileDetail = $("<input type='button' value='详情' style='float: right;margin-left: 2px;' " +
+                            " onclick=\""+"showInfo('"+file_name+"','"+is_file+"')"+"\"/>");
+
+                        //添加内容
+						if(is_file=='true')
+						    $ul_child.append($down);
+                        $ul_child.append($delete).append($rename).append($removeDir).append($copyDir).append($fileDetail);
+
+
+
+
+                        $div_child.append($u).append($ul_child)
+                        $div.append($div_child)
+						$tag_li.append($div);
+                        $("#file_list").append($tag_li);
+                    }
+                }
+            });
+        }
+
+        //点击一个项目
+		function clickItems(file_name, is_file) {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+
+			if(is_file!="true"){//如果是文件夹
+                var new_dir = temp_dir+"/"+file_name;
+                $("#tempDir").val(new_dir);
+                $("#temp_dir").val(new_dir);
+                show_content();
+			}else{
+                //判断是否是TXT、doc、docx文件
+                if(file_name.length>4&&file_name.substring(file_name.length-3,file_name.length)=='txt'
+                    ||(file_name.length>4&&file_name.substring(file_name.length-3,file_name.length)=='doc')
+                    ||(file_name.length>5&&file_name.substring(file_name.length-4,file_name.length)=='docx')
+                    ||(file_name.length>3&&file_name.substring(file_name.length-2,file_name.length)=='py'))
+                    readTxtOrPDF(file_name,false);
+                else if(file_name.length>4&&file_name.substring(file_name.length-3,file_name.length)=='pdf')
+                    readTxtOrPDF(file_name,true);
+                else if((file_name.length>4&&file_name.substring(file_name.length-3,file_name.length)=='png')
+                    ||(file_name.length>4&&file_name.substring(file_name.length-3,file_name.length)=='jpg')
+                    ||(file_name.length>5&&file_name.substring(file_name.length-4,file_name.length)=='jpeg'))
+                    playMedia(file_name,"img");
+                else if(file_name.length>4&&file_name.substring(file_name.length-3,file_name.length)=='mp4')
+                    playMedia(file_name,"mp4");
+                else if(file_name.length>4&&file_name.substring(file_name.length-3,file_name.length)=='mp3')
+                    playMedia(file_name,"mp3");
+			}
+        }
+
+        //显示文件详细信息
+		function showInfo(file_name,is_file) {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+			$.ajax({
+				"url":"/qq_system/file/showFileInfo",
+				"data":{"tempDir":temp_dir,"fileName":file_name,"isAbsolutePath":isAbsolutePath},
+				"success":function (data) {
+					var Jdata = JSON.parse(JSON.stringify(data));
+					var msg = "文件大小："+Jdata.fileSize+"\n" +
+						"创建时间："+Jdata.creationTime+"\n" +
+						"更新时间："+Jdata.lastAccessTime+"\n" +
+						"访问时间："+Jdata.lastAccessTime+"\n";
+					if(is_file!='true')
+					    msg += "子项目个数："+Jdata.numsOfItems;
+					alert(msg);
+                }
+			});
+        }
+
+
+
+
+        //创建文件夹
+        function createFolder() {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            var new_folder = prompt("请输入文件夹名字：");
+            if(new_folder==null||new_folder=='')//用户取消，停止执行接下来的代码
+                return;
+
+            $.ajax({
+                type:"post",
+                url:"/qq_system/file/createFolder?tempDir="+temp_dir+"&newFolder="+new_folder+"&isAbsolutePath="+isAbsolutePath,
+                contentType:"application/json;charset=utf-8",
+				success:function () {
+					show_content();
+                },
+				error:function () {
+					alert("系统发生了未知错误！");
+                }
+            });
+        }
+
+        //新建文档
+        function createTxt() {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            var file_name = prompt("请输入文件名字：");
+            if(file_name==null||file_name=='')//用户取消，停止执行接下来的代码
+                return;
+			if(file_name.indexOf('.')==-1)
+			    file_name += ".txt";
+
+            $.ajax({
+                type:"post",
+                url:"/qq_system/file/createTxt?tempDir="+temp_dir+"&fileName="+file_name+"&isAbsolutePath="+isAbsolutePath,
+                contentType:"application/json;charset=utf-8",
+				success:function () {
+					show_content();
+                }
+            });
+        }
+
+
+        //下载文件
+        function downFile(name) {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            location.href = "/qq_system/file/down?tempDir="+temp_dir+"&fileName="+name+"&isAbsolutePath="+isAbsolutePath;
+        }
+
+        //返回上一级目录
+        function backPreLevel() {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            //上一级目录
+            var new_dir = temp_dir.substring(0,temp_dir.lastIndexOf("/"));
+            $("#tempDir").val(new_dir);
+            $("#temp_dir").val(new_dir);
+            show_content();
+        }
+
+
+        //删除文件或文件夹
+        function deleteItem(name) {
+            //提示用户是否需要删除
+            var choose = confirm("确定要删除项目："+name+"?");
+            if(choose==false)//用户取消删除
+                return;
+
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            //需要删除的路径
+            var path = temp_dir+"/"+name;
+            $.ajax({
+                type:"post",
+                url:"/qq_system/file/delete?path="+path+"&isAbsolutePath="+isAbsolutePath,
+                contentType:"application/json;charset=utf8",
+				success:function () {
+					show_content();
+                },
+				error:function () {
+					alert("系统发生了未知的错误！");
+                }
+            });
+        }
+
+        setInterval(function () {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            if(temp_dir.split('/').length==2)
+            {
+                $(".lastLevel").attr("disabled","true");
+            }else{
+                $(".lastLevel").removeAttr("disabled");
+			}
+        },10);
+
+        //重命名
+        function rename(old_name) {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            //新文件名
+            var new_name = prompt("请输入文件名：",old_name);
+            if(new_name==null||new_name=='')//用户取消，停止执行接下来的代码
+                return;
+            $.ajax({
+                type:"post",
+                url:"/qq_system/file/rename?tempDir="+temp_dir+"&oldName="+old_name+"&newName="+new_name+"&isAbsolutePath="+isAbsolutePath,
+				success:function () {
+					show_content();
+                },
+				error:function () {
+					alert("系统发生了未知的错误！");
+                }
+            });
+        }
+
+        //读取文件
+        function readTxtOrPDF(file_name,isPDF) {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            location.href="/qq_system/file/getTxtOrPdfPage?tempDir="+temp_dir+"&fileName="+file_name+"&isAbsolutePath="+isAbsolutePath+"&isPDF="+isPDF;
+        }
+
+
+        //播放媒体文件
+		function playMedia(file_name,type) {
+            //获取当前目录
+            var temp_dir = $("#tempDir").val();
+            //排序方式
+            var sortName = $("#sortName").text();
+            //升序还是降序
+            var isAsc = $("#isAsc").text();
+            location.href="/qq_system/file/getMediaPage?type="+type+"&tempDir="+temp_dir
+				+"&sortName="+sortName+"&isAsc="+isAsc+"&fileName="+file_name+"&isAbsolutePath="+isAbsolutePath;
+        }
+
+        //复制或移动的文件路径
+		var srcDir = null
+
+        //复制或移动目录
+		function copyOrRemoveDir(file_name,isRemove) {
+            var $tempDir = $("#tempDir").val();
+            srcDir = $tempDir+"/"+file_name;
+            $("#paste").remove();
+			$("#btn_list").append(
+			    $("<input id='paste' type=\"button\" style=\"background-color: yellow\" value=\"粘贴\" onclick=\"paste('"+isRemove+"')\">")
+			);
+        }
+
+        //粘贴
+		function paste(isRemove) {
+			var destDir = $("#tempDir").val();
+			var chs = confirm("将目录:\""+srcDir+(isRemove=='false'?"\"复制":"\"移动")+"到目录:\""+destDir+"\"?");
+			if(chs==false)
+			    return;
+            $.ajax({
+                type:"post",
+                url:"/qq_system/file/copyOrMoveDirOrFile?srcDir="+srcDir+"&destDir="+destDir+"&isAbsolutePath="+isAbsolutePath+"&isRemove="+isRemove,
+                success:function (data) {
+                    if(data.toString()=="error"){
+                        alert("当前目录已存在原文件！");
+					}
+                    show_content();
+                },
+                error:function () {
+                    alert("系统发生了未知的错误！");
+                },
+            });
+			$("#paste").remove()
+        }
+
+        //排序方式
+		function clickName() {
+			var sortName = $("#sortName").text();
+			if(sortName=="名称"){
+			    sortName = "大小";
+			}else if(sortName=="大小"){
+			    sortName = "时间";
+			}else{
+			    sortName = "名称";
+			}
+			$("#sortName").text(sortName);
+			show_content();
+        }
+
+        //升序或降序
+		function clickSort() {
+            var isAsc = $("#isAsc").text();
+            if(isAsc=="升序"){
+                isAsc = "降序";
+			}else{
+                isAsc = "升序";
+			}
+			$("#isAsc").text(isAsc);
+            show_content();
+        }
+
+	</script>
+</body>
+</html>

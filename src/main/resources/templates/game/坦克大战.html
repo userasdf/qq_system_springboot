@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            position: relative;
+        }
+        .container{
+            position: absolute;
+            top: 5%;
+            left: 5%;
+            width: 800px;
+            height: 500px;
+            border: 1px solid red;
+        }
+        .systemTanker{
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+        .myTanker{
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-image: url("/qq_system/img/1.png");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+        .systemBullet{
+            position: absolute;
+            background-color: blue;
+            width: 5px;
+            height: 5px;
+        }
+        .myBullet{
+            position: absolute;
+            background-color: red;
+            width: 5px;
+            height: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container"> 
+    <span class="systemTanker" :style="'top:'+tanker.y+'px;left:'+tanker.x+'px;background-image:url('+'/qq_system/img/'+tanker.dir+'.png'+') '"
+          v-for="tanker in systemTankerList"></span>
+    <span class="myTanker" :style="'top:'+myTanker.y+'px;left:'+myTanker.x+'px;background-image:url('+'/qq_system/img/'+myTanker.dir+'.png'+') '">{{life}}</span>
+    <span class="systemBullet" :style="'top:'+bullet.y+'px;left:'+bullet.x+'px '"
+          v-for="bullet in systemBulletList"></span>
+    <span class="myBullet" :style="'top:'+bullet.y+'px;left:'+bullet.x+'px '"
+          v-for="bullet in myBulletList"></span>
+</div>
+<span id="life" style="position: absolute;top: 5px;right:50px;width: 200px;height: 20px;border: 1px solid red;"></span>
+</body>
+<script th:src="@{/js/common/jquery-3.3.1.min.js}"></script>
+<script th:src="@{/js/common/vue.js}"></script>
+<script th:src="@{/js/common/vue@2.7.10}"></script>
+
+<script>
+
+    var tankerSpeed = 1;//坦克移动速度
+    var bulletSpeed = 5;//子弹移动速度
+    var containerRight = 800;//容器最右边
+    var containerBottom = 500;//容器最下边
+
+    var systemTankerId = 0;//敌方坦克id
+
+    var life = 20;//坦克生命值
+    var score = 0;//得分
+
+    //vue绑定的数据
+    var data = {
+        systemTankerList:[],
+        myTanker:{
+            id:001,
+            x:34,
+            y:45,
+            dir:2
+        },
+        systemBulletList:[],
+        myBulletList:[]
+    };
+
+    new Vue({
+        el:".container",
+        data:data
+    });
+
+    //开局随机生成若干坦克
+    generateEnemyTanker();
+
+    //敌方坦克持续不断的移动
+    setInterval(function () {
+        let tmp = data.systemTankerList;
+        for(i in tmp){
+            if(tmp[i].country==1)
+                continue;
+            if(tmp[i].dir==1){
+                if(tmp[i].y>0){
+                    tmp[i].y -= tankerSpeed;
+                }else{
+                    tmp[i].dir = 3;
+                }
+            }else if(tmp[i].dir==2){
+                if(tmp[i].x<containerRight){
+                    tmp[i].x += tankerSpeed;
+                }else{
+                    tmp[i].dir = 4;
+                }
+            }else if(tmp[i].dir==3){
+                if(tmp[i].y<containerBottom){
+                    tmp[i].y += tankerSpeed;
+                }else{
+                    tmp[i].dir = 1;
+                }
+            }else{
+                if(tmp[i].x>0){
+                    tmp[i].x -= tankerSpeed;
+                }else{
+                    tmp[i].dir = 2;
+                }
+            }
+            rdm = parseInt(Math.random()*1000);
+            if(rdm>=1&&rdm<=4){//改变方向
+                tmp[i].dir = rdm;
+            }else if(rdm>=5&&rdm<=10){//发射子弹
+                fireBullet(tmp[i].id,tmp[i].dir,tmp[i].x+10,tmp[i].y+10,0);
+            }
+        }
+        data.systemTankerList = tmp;
+
+    },10);
+
+    // //我方坦克持续不断的移动
+    // setInterval(function(){
+
+    //     if(data.myTanker.dir==1){
+    //         if(data.myTanker.y>0){
+    //             data.myTanker -= tankerSpeed;
+    //         }else{
+    //             data.myTanker.dir = 3;
+    //         }
+    //     }else if(data.myTanker.dir==2){
+    //         if(data.myTanker.x<containerRight){
+    //             data.myTanker.x += tankerSpeed;
+    //         }else{
+    //             data.myTanker.dir = 4;
+    //         }
+    //     }else if(data.myTanker.dir==3){
+    //         if(data.myTanker.y<containerBottom){
+    //             data.myTanker.y += tankerSpeed;
+    //         }else{
+    //             data.myTanker.dir = 1;
+    //         }
+    //     }else{
+    //         if(data.myTanker.x>0){
+    //             data.myTanker.x -= tankerSpeed;
+    //         }else{
+    //             data.myTanker.dir = 2;
+    //         }
+    //     }
+    // },10);
+
+    //控制敌方子弹不停的移动
+    setInterval(function () {
+        let tmpBullet = data.systemBulletList;
+        for(i in tmpBullet){
+            if(tmpBullet[i].dir==1){
+                if(tmpBullet[i].y>0){
+                    tmpBullet[i].y -= bulletSpeed;
+                }else{
+                    destroyBulletById(tmpBullet[i].id,0);
+                }
+            }else if(tmpBullet[i].dir==2){
+                if(tmpBullet[i].x<containerRight){
+                    tmpBullet[i].x += bulletSpeed;
+                }else{
+                    destroyBulletById(tmpBullet[i].id,0);
+                }
+            }else if(tmpBullet[i].dir==3){
+                if(tmpBullet[i].y<containerBottom){
+                    tmpBullet[i].y += bulletSpeed;
+                }else{
+                    destroyBulletById(tmpBullet[i].id,0);
+                }
+            }else{
+                if(tmpBullet[i].x>0){
+                    tmpBullet[i].x -= bulletSpeed;
+                }else{
+                    destroyBulletById(tmpBullet[i].id,0);
+                }
+            }
+        }
+        data.systemBulletList = tmpBullet;
+    },10);
+
+    //控制己方子弹不停的移动
+    setInterval(function () {
+        let tmpBullet = data.myBulletList;
+        for(i in tmpBullet){
+            if(tmpBullet[i].dir==1){
+                if(tmpBullet[i].y>0){
+                    tmpBullet[i].y -= bulletSpeed;
+                }else{
+                    destroyBulletById(tmpBullet[i].id,1);
+                }
+            }else if(tmpBullet[i].dir==2){
+                if(tmpBullet[i].x<containerRight){
+                    tmpBullet[i].x += bulletSpeed;
+                }else{
+                    destroyBulletById(tmpBullet[i].id,1);
+                }
+            }else if(tmpBullet[i].dir==3){
+                if(tmpBullet[i].y<containerBottom){
+                    tmpBullet[i].y += bulletSpeed;
+                }else{
+                    destroyBulletById(tmpBullet[i].id,1);
+                }
+            }else{
+                if(tmpBullet[i].x>0){
+                    tmpBullet[i].x -= bulletSpeed;
+                }else{
+                    destroyBulletById(tmpBullet[i].id,1);
+                }
+            }
+        }
+        data.myBulletList = tmpBullet;
+    },10);
+
+
+    //键盘按下
+    window.onkeydown = function(ev){
+        if(ev.keyCode==38){
+            topDir = true;
+        }else if(ev.keyCode==39){
+            rightDir = true;
+        }else if(ev.keyCode==40){
+            bottomDir = true;
+        }else if(ev.keyCode==37){
+            leftDir = true;
+        }else if(ev.keyCode==32){
+            fireBullet(data.myTanker.id,data.myTanker.dir,data.myTanker.x+10,data.myTanker.y+10,1);
+        }
+    }
+
+    //键盘松开
+    window.onkeyup = function(ev){
+        if(ev.keyCode==38){
+            topDir = false;
+        }else if(ev.keyCode==39){
+            rightDir = false;
+        }else if(ev.keyCode==40){
+            bottomDir = false;
+        }else if(ev.keyCode==37){
+            leftDir = false;
+        }
+    }
+
+    var topDir = false;
+    var rightDir = false;
+    var bottomDir = false;
+    var leftDir = false;
+    
+    //控制某个方向的移动
+    setInterval(() => {
+        if(topDir){
+            data.myTanker.y -= tankerSpeed+2
+            data.myTanker.dir = 1;
+        }else if(rightDir){
+            data.myTanker.x += tankerSpeed+2;
+            data.myTanker.dir = 2;
+        }else if(bottomDir){
+            data.myTanker.y += tankerSpeed+2;
+            data.myTanker.dir = 3;
+        }else if(leftDir){
+            data.myTanker.x -= tankerSpeed+2;
+            data.myTanker.dir = 4;
+        }
+    }, 10);
+    
+
+    //开局随机生成若干敌方坦克，和自己的坦克
+    function generateEnemyTanker(){
+        let tankerList = []
+        for(i=0;i<9;i++){
+            systemTankerId += 1;
+            x = parseInt(Math.random()*500)
+            y = parseInt(Math.random()*500)
+            tankerList.push({
+                id:systemTankerId,
+                country:0,
+                dir:i%4+1,
+                state:0,
+                x:x,
+                y:y
+            });
+        }
+        data.systemTankerList = tankerList;
+    }
+
+    // 定期生成敌方坦克
+    setInterval(function(){
+        systemTankerId += 1;
+        x = parseInt(Math.random()*50)
+        y = parseInt(Math.random()*50)
+        data.systemTankerList.push({
+                id:systemTankerId,
+                country:0,
+                dir:systemTankerId%4+1,
+                state:0,
+                x:x,
+                y:y
+            });
+    },5000);
+
+    setInterval(function(){
+        $("#life").text("得分："+score);
+    },10);
+
+    //碰撞检测
+    setInterval(function(){
+        //检测敌方子弹碰撞我方坦克
+        let bulletList = data.systemBulletList;
+        let tanker = data.myTanker;
+        for(i in bulletList){
+            if((tanker.x<(bulletList[i].x+20))&&(tanker.x>(bulletList[i].x-20))
+                            &&((tanker.y<(bulletList[i].y+20))&&(tanker.y>(bulletList[i].y-20)))){
+                                life -= 1;
+                                //摧毁敌方子弹
+                                destroyBulletById(bulletList[i].id,0);
+                            }
+        }
+
+        //检测我方子弹碰撞敌方坦克
+        let myBulletList = data.myBulletList;
+        let systemTankerList = data.systemTankerList;
+        for(i in systemTankerList){
+            for(j in myBulletList){
+                if((systemTankerList[i].x<(myBulletList[j].x+20))&&(systemTankerList[i].x>(myBulletList[j].x-20))
+                            &&((systemTankerList[i].y<(myBulletList[j].y+20))&&(systemTankerList[i].y>(myBulletList[j].y-20)))){
+                                //摧毁敌方坦克
+                                destroyTankerById(systemTankerList[i].id);
+                                //摧毁我方子弹
+                                destroyBulletById(myBulletList[j].id,1);
+                                //分数加一
+                                score += 1;
+                            }
+            }
+        }
+    },10);
+
+    //发射子弹
+    function fireBullet(id, dir, x, y,country) {
+        let bulletTmp = data.systemBulletList;
+        if(country==1){
+            bulletTmp = data.myBulletList;
+        }
+        bulletTmp.push({
+            id:id,
+            dir:dir,
+            x:x,
+            y:y
+        })
+    }
+
+    //销毁子弹
+    function destroyBulletById(id,country) {
+        if(country==0){
+            for(i in data.systemBulletList){
+                if(data.systemBulletList[i].id==id){
+                    data.systemBulletList.splice(i,1);
+                    break;
+                }
+            }
+        }else{
+            for(i in data.myBulletList){
+                if(data.myBulletList[i].id==id){
+                    data.myBulletList.splice(i,1);
+                    break;
+                }
+            }
+        }
+        
+        
+    }
+
+    //销毁坦克
+    function destroyTankerById(id){
+        for(i in data.systemTankerList){
+            if(data.systemTankerList[i].id==id){
+                data.systemTankerList.splice(i,1);
+                break;
+            }
+        }
+    }
+</script>
+</html>

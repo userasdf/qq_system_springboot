@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+    <title th:if="${type=='img'}" th:text="|图片:${fileName}|">播放音频页面</title>
+    <title th:if="${type=='mp3'}" th:text="|音频:${fileName}|">播放音频页面</title>
+    <title th:if="${type=='mp4'}" th:text="|视频:${fileName}|">播放音频页面</title>
+    <style>
+        .div{
+            margin:0 auto; width:500px; height:auto;
+            padding-bottom: 0px;
+        }
+
+        .size{
+            width: 500px;
+            height: auto;
+            border: 1px solid blue;
+            margin-bottom: 0px;
+        }
+    </style>
+</head>
+<body style="position: relative">
+
+<!--左边一对-->
+<div style="position:absolute;font-size: 25px;left: 0px;">
+    <p>媒体文件个数：<span th:text="${fileListSize}"></span></p>
+    <p>当前文件位置：<span th:text="${tempI}"></span></p>
+    <p>
+        <button onclick="expandSize()" style="font-size: 25px;">放大</button>
+        <button onclick="unExpandSize()" style="font-size: 25px;">缩小</button>
+        <button onclick="switchPattern()" id="pattern" style="font-size: 25px;" th:text="${pattern}">自动切换</button>
+    </p>
+    <a class="switchMedia" th:if="${preFile!=null}" th:href="${preFile}" id="preMedia">上一个</a>
+    <a class="switchMedia" th:if="${nextFile!=null}" th:href="${nextFile}" id="nextMedia">下一个</a>
+    <a href="javascript:reback()">返回</a>
+</div>
+
+<!--右边一对-->
+<div style="position:absolute;font-size: 25px;right: 0px;">
+    <p>媒体文件个数：<span th:text="${fileListSize}"></span></p>
+    <p>当前文件位置：<span th:text="${tempI}"></span></p>
+    <p>
+        <button onclick="expandSize()" style="font-size: 25px;">放大</button>
+        <button onclick="unExpandSize()" style="font-size: 25px;">缩小</button>
+    </p>
+    <a href="javascript:reback()">返回</a>
+    <a class="switchMedia" th:if="${preFile!=null}" th:href="${preFile}">上一个</a>
+    <a class="switchMedia" th:if="${nextFile!=null}" th:href="${nextFile}">下一个</a>
+</div>
+
+<div class="div">
+    <p style="border: 1px solid red;margin: 0px;font-size: 25px;">文件名：<span th:text="${fileName}"></span></p>
+    <input type="hidden" id="tempDir" th:value="${tempDir}">
+    <input type="hidden" id="isAbsolutePath" th:value="${isAbsolutePath}">
+    <!--如果是视频-->
+    <video id="mp4" autoplay="autoplay" onended="fun()" class="size" controls="controls"
+           th:src="${url}" th:if="${type=='mp4'}">
+        <source id="mp4_source" th:src="${url}" type="video/mp4">
+    </video>
+    <!--如果是图片-->
+    <img class="size" controls="controls" th:src="${url}" th:if="${type=='img'}">
+    <!--如果是音频-->
+    <video id="mp3" autoplay="autoplay" onended="fun()" class="size" controls="controls"
+            th:if="${type=='mp3'}">
+        <source id="mp3_source" th:src="${url}" type="video/mp4">
+    </video>
+</div>
+
+<script th:src="@{/js/common/vue.js}"></script>
+<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+<script>
+
+
+
+
+    //播放模式
+    function switchPattern() {
+        var ptn = $("#pattern").text();
+        if(ptn=="自动切换"){
+            ptn = "重复播放";
+        }else if(ptn=="重复播放"){
+            ptn = "播完结束";
+        }else{
+            ptn = "自动切换"
+        }
+        $("#pattern").text(ptn);
+        var href = $(".switchMedia").attr("href");
+        href = href.substring(0,href.length-4)+ptn;
+        $(".switchMedia").attr("href",href);
+    }
+
+
+    //播放完成事件
+    function fun() {
+        var ptn = $("#pattern").text();
+        if(ptn=="自动切换"){
+            document.getElementById("nextMedia").click();
+        }else if(ptn=="重复播放"){
+            $("#mp4").trigger("play");
+            $("#mp3").trigger("play");
+        }
+    }
+
+
+    function reback() {
+        var tempDir = $("#tempDir").val();
+        var isAbsolutePath = $("#isAbsolutePath").val();
+        location.href='/qq_system/index?tempDir='+tempDir+"&isAbsolutePath="+isAbsolutePath;
+    }
+
+    function expandSize() {
+        var temp = $(".size").css("width").toString();
+        var len = temp.length;
+        temp = parseInt(temp.substring(0,len-2))+10;
+        $(".size").css("width",temp.toString()+"px");
+        $(".div").css("width",temp.toString()+"px");
+    }
+
+    function unExpandSize() {
+        var temp = $(".size").css("width").toString();
+        var len = temp.length;
+        temp = parseInt(temp.substring(0,len-2))-10;
+        $(".size").css("width",temp.toString()+"px");
+        $(".div").css("width",temp.toString()+"px");
+    }
+
+    $("#mp4").trigger("play");
+    $("#mp3").trigger("play");
+
+</script>
+</body>
+</html>

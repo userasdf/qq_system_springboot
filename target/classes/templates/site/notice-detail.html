@@ -1,0 +1,87 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<link rel="stylesheet" th:href="@{/css/letter.css}" />
+	<title>聊天系统-通知详情</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container">
+				<div class="row">
+					<div class="col-8">
+						<h6><b class="square"></b> 系统通知</h6>
+					</div>
+					<div class="col-4 text-right">
+						<button type="button" class="btn btn-secondary btn-sm" onclick="location.href='/qq_system/user/getSystemAdvicePage';">返回</button>
+					</div>
+				</div>
+
+				<!--//四种情况-->
+				<!--//评论帖子：用户名、帖子内容、评论内容、发送时间-->
+				<!--//回复评论：用户名、评论内容、回复内容、发送时间-->
+				<!--//点赞帖子：用户名、帖子内容、点赞时间-->
+				<!--//点赞评论：用户名、评论内容、点赞时间-->
+				<!-- 通知列表 -->
+				<ul class="list-unstyled mt-4">
+					<li class="media pb-3 pt-3 mb-2" th:each="adviceVO:${adviceVOList}">
+						<img src="http://static.nowcoder.com/images/head/notify.png" class="mr-4 rounded-circle user-header" alt="系统图标">
+						<div class="toast show d-lg-block" role="alert" aria-live="assertive" aria-atomic="true">
+							<div class="toast-header">
+								<strong style="width: 500px;" class="mr-auto" th:utext="${adviceVO.content}">落基山脉下的闲人</strong>
+								<small th:utext="${#dates.format(adviceVO.createTime,'yyyy-MM-dd HH:mm:ss')}">2019-04-25 15:49:32</small>
+								<!--<button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">-->
+									<!--<span aria-hidden="true">&times;</span>-->
+								<!--</button>-->
+							</div>
+							<div class="toast-body">
+								<!--如果是评论-->
+								<span th:if="${topic=='comment'}">
+									用户 <i th:utext="${adviceVO.senderUserName}">nowcoder</i>
+									的评论：<b th:utext="${adviceVO.comment}"></b>
+								</span>
+								<!--如果是回复-->
+								<span th:if="${topic=='reply'}">
+									用户 <i th:utext="${adviceVO.senderUserName}">nowcoder</i>
+									的回复：<b th:utext="${adviceVO.comment}"></b>
+								</span>
+								<!--如果是点赞-->
+								<span th:if="${topic=='like'&&adviceVO.comment=='1'}">
+									用户 <i th:utext="${adviceVO.senderUserName}">nowcoder</i>
+									认为你这条言论很赞！
+								</span>
+								<!--如果是取消点赞-->
+								<span th:if="${topic=='like'&&adviceVO.comment=='0'}">
+									用户 <i th:utext="${adviceVO.senderUserName}">nowcoder</i>
+									取消了对你这条言论的点赞！
+								</span>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/global.js}"></script>
+	<script th:src="@{/js/letter.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+</body>
+</html>

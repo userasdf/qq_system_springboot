@@ -1,0 +1,80 @@
+<head>
+		<meta charset="utf-8">
+		<style>
+			#container{
+				width: 570px;
+				height: 200px;
+			}
+			dl{
+				float: left;
+			}
+			dt{
+				width: 90px;
+				height: 90px;
+				background-color: lightblue;
+				border-radius: 20px;
+				margin: 10px;
+			}
+			
+			.yellow{
+				background-color: lightgoldenrodyellow;
+			}
+			.blue{
+				background-color: lightblue;
+			}
+		</style>
+		<title></title>
+	</head>
+	<body>
+		<div id="container">
+			<dl>
+				<dt onclick="f1(this)"></dt>
+				<dd>单击</dd>
+			</dl>
+			<dl>
+				<dt ondblclick="f2(this)"></dt>
+				<dd>双击</dd>
+			</dl>
+			<dl>
+				<dt onmouseover="this.className='yellow'" onmouseout="this.className='blue'"></dt>
+				<dd>悬停</dd>
+			</dl>
+			<dl>
+				<dt onmousedown="this.className='yellow'" onmouseup="this.className='blue'"></dt>
+				<dd>按下</dd>
+			</dl>
+			<dl>
+				<dt id="ele" onmousemove="mouseMove(event)"></dt>
+				<dd>移动</dd>
+			</dl>
+			<br><span id="echo"></span>
+		</div>	
+		<script>
+			var num1=0,num2=0;
+			function f1(e){
+				num1++;
+				if(num1%2==0)
+					e.className="blue";
+				else
+					e.className="yellow";
+			}
+			function f2(e){
+				num2++;
+				if(num2%2==0)
+					e.className="blue";
+				else
+					e.className="yellow";
+			}
+			function mouseMove(ev){				
+				ev=ev||window.event;
+				var el=document.getElementById("ele");
+				var x=ev.clientX-el.offsetLeft;
+				var y=ev.clientY-el.offsetTop;
+				if(x<el.offsetWidth/2)
+					el.style.background="lightgoldenrodyellow";
+				else 
+					el.style.background="lightpink";
+				document.getElementById("echo").innerHTML="x:"+x+"<br>y:"+y;
+			}
+		</script>
+	</body>

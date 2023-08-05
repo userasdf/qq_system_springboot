@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>sendFile</title>
+</head>
+<body>
+
+    <input id="file" type="file">
+    <button onclick="sendFile()">发送</button>
+
+
+    <script>
+        function sendFile() {
+            var files = $('#file')[0].files;
+            if(files.length <=0 ){
+                return alert('请选择文件后再上传！')
+            }
+            // console.log('ok')
+            // 使用jQuery发起上传文件请求
+            var fd = new FormData()
+            fd.append('avatar',files[0])
+            $.ajax({
+                type:'post',
+                url:'http://localhost:8888/qq_system/file/upload',
+                data:fd,
+                processData:false,
+                contentType:false,
+                success:function(res){
+                    console.log(res)
+                }
+            })
+        }
+    </script>
+</body>
+</html>

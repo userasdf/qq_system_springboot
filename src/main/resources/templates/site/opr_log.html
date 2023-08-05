@@ -1,0 +1,126 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-操作日志</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container">
+				<div class="position-relative">
+					<!-- 选项 -->
+					<ul class="nav nav-tabs mb-3">
+						<li class="nav-item">
+							<a th:class="|nav-link position-relative ${tempUserType!=null?'active':''}|" th:href="@{/user/getOprLogs}"><i class="text-info">操作日志</i></a>
+						</li>
+						<li class="nav-item" th:if="${user.type==1}">
+							<a th:class="|nav-link position-relative ${otherType!=null?'active':''}|" th:href="@{/user/getAllOprLogs}"><i class="text-info">其他用户日志</i></a>
+						</li>
+						<li th:if="${user.type==1}">
+							<input id="userName" type="text" th:value="${userName}">
+						</li>
+						<li class="nav-item" th:if="${user.type==1}">
+							<a th:class="|nav-link position-relative ${byUserNameType!=null?'active':''}|" onclick="searchByUsername()"><i class="text-info">用户名查询</i></a>
+						</li>
+						<li th:if="${user.type==1}">
+							<input id="ipAddress" type="text" th:value="${ipAddress}">
+						</li>
+						<li class="nav-item" th:if="${user.type==1}">
+							<a th:class="|nav-link position-relative ${byIpAddressType!=null?'active':''}|" onclick="searchByIpAddress()"><i class="text-info">ip查询</i></a>
+						</li>
+					</ul>
+					<a th:href="@{/index}" class="text-muted position-absolute rt-0">返回个人主页&gt;</a>
+				</div>
+				
+				<!-- 关注列表 -->
+				<ul class="list-unstyled">
+					<li class="media border-bottom position-relative" th:each="oprLog:${oprLogList}">
+						<!--<a href="profile.html">-->
+							<!--<img src="http://images.nowcoder.com/head/8t.png" class="mr-4 rounded-circle user-header" alt="用户头像" >-->
+						<!--</a>-->
+						<div class="media-body" >
+							<h6 class="mt-0" style="margin-bottom: 0px;">
+								<div class="float-left " th:utext="${oprLog.userName}"></div>
+								<span class="text-success" style="margin-left: 5px;font-size: 13px;" th:utext="${oprLog.info}"></span>
+								<div class="text-success" style="margin-top: 2px;">
+									<div class="text-muted " style="font-size: 10px;float: left;" th:utext="${#dates.format(oprLog.oprTime,'yyyy-MM-dd HH:mm:ss')}"></div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left">&nbsp;&nbsp;&nbsp;</div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left;color: #fd54ff;" th:utext="${oprLog.ipAddress}"></div>
+									<div th:if="${user.type==1}"   style="font-size: 10px;float: left" >&nbsp;&nbsp;&nbsp;</div>
+									<div class="text-muted " th:if="${user.type==1}"  style="font-size: 10px;float: left" th:utext="${oprLog.location}"></div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left" >&nbsp;&nbsp;&nbsp;</div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left;color: #cd455a" th:utext="${oprLog.terminal}"></div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left" >&nbsp;&nbsp;&nbsp;</div>
+									<div class="text-muted " th:if="${user.type==1}"  style="font-size: 10px;float: left;" th:utext="${oprLog.equipmentType}"></div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left" >&nbsp;&nbsp;&nbsp;</div>
+									<div th:if="${user.type==1}" style="font-size: 10px;float: left;color: #89cd1d" th:utext="${oprLog.oprSystem}"></div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left" >&nbsp;&nbsp;&nbsp;</div>
+									<div class="text-muted " th:if="${user.type==1}"  style="font-size: 10px;float: left" th:utext="${oprLog.browerName}"></div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left" >&nbsp;&nbsp;&nbsp;</div>
+									<div th:if="${user.type==1}" style="font-size: 10px;float: left;color: #ff276d" th:utext="${oprLog.browerVersion}"></div>
+									<div th:if="${user.type==1}"  style="font-size: 10px;float: left" >&nbsp;&nbsp;&nbsp;</div>
+									<div class="text-muted " th:if="${user.type==1}" style="font-size: 10px;float: left;" th:utext="${oprLog.browerEngine}"></div>
+								</div>
+							</h6>
+						</div>
+					</li>
+				</ul>
+				<nav class="mt-1" th:fragment="pagination">
+					<!--如果没有记录，则不显示分页的功能-->
+					<ul class="pagination justify-content-center" th:if="${page.rows!=0}">
+						<li class="">
+							<span class="page-link"><i th:text="${rows}"></i>条记录</span>
+						</li>
+						<li th:class="|page-item ${page.current==1?'disabled':''}|">
+							<a class="page-link" th:href="@{${page.path}(current=1)}">首页</a>
+						</li>
+						<li th:class="|page-item ${page.current==1?'disabled':''}|">
+							<a class="page-link" th:href="@{${page.path}(current=${page.current - 1})}">上页</a>
+						</li>
+						<li th:class="|page-item ${page.current==i?'active':''}|" th:each="i:${#numbers.sequence(page.from,page.to)}">
+							<a class="page-link" th:href="@{${page.path}(current=${i})}" th:text="${i}">1</a>
+						</li>
+
+						<li th:class="|page-item ${page.current==page.total?'disabled':''}|">
+							<a class="page-link" th:href="@{${page.path}(current=${page.current + 1})}">下页</a>
+						</li>
+						<li th:class="|page-item ${page.current==page.total?'disabled':''}|"><a class="page-link" th:href="@{${page.path}(current=${page.total})}">末页</a></li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/global.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+	<script th:src="@{/js/profile.js}"></script>
+	<script th:src="@{/js/clipboard.min.js}"></script>
+	<script>
+		function searchByUsername() {
+			var userName = $("#userName").val();
+			location.href = "/qq_system/user/getOprLogsByUsername?userName="+userName;
+        }
+
+        function searchByIpAddress() {
+			var ipAddress = $("#ipAddress").val();
+			location.href = "/qq_system/user/getOprLogsByIpAddress?ipAddress="+ipAddress;
+        }
+	</script>
+</body>
+</html>

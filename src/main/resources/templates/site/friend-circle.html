@@ -1,0 +1,283 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238/:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<link rel="stylesheet" th:href="@{/css/discuss-detail.css}" />
+	<title>牛客网-帖子详情</title>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header"></header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<!-- 弹出框 -->
+			<div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalLabel" aria-hidden="true">
+				<div class="modal-dialog modal-lg" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="publishModalLabel">说说发布</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							<form>
+								<div class="form-group">
+									<label for="message-text" class="col-form-label">正文：</label>
+									<textarea class="form-control" style="height: 100px;" id="message-text" rows="15"></textarea>
+								</div>
+							</form>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+							<button type="button" class="btn btn-primary" id="publishBtn" onclick="publish()">发布</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- 提示框 -->
+			<div class="modal fade" id="hintModal" tabindex="-1" role="dialog" aria-labelledby="hintModalLabel" aria-hidden="true">
+				<div class="modal-dialog modal-lg" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="hintModalLabel">提示</h5>
+						</div>
+						<div class="modal-body" id="hintBody">
+							发布完毕!
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- 动态列表 -->
+			<div class="container" id="friendCircle">
+
+			</div>
+		</div>
+
+	</div>
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<!--<script th:src="@{/js/global.js}"></script>-->
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+		var tempUserName = $("#tempUserName").text();
+
+		//评论
+		function comment(commentId,user_name,discussPostId,target_id,topic) {
+
+			var content = prompt("请输入对好友"+user_name+"的评论：");
+			if(content==null||content=='')
+			    return;
+            $.post({
+                url:"/qq_system/user/commentDiscussPost",
+                data:{"content":content,"targetId":target_id,"entityId":discussPostId,"topic":topic,"commentId":commentId},
+                success:function (data) {
+                    //显示提示框消息
+                    $("#hintBody").text(data);
+                    $("#hintModal").modal("show");
+                    setTimeout(function(){
+                        $("#hintModal").modal("hide");
+                    }, 1000);
+                }
+            });
+        }
+
+        //点赞
+        function click_like(entityType,entityId) {
+            $.post({
+                url:"/qq_system/user/like",
+                data:{"entityType":entityType,"entityId":entityId},
+                // success:function (data) {
+                //     //显示提示框消息
+                //     $("#hintBody").text(data);
+                //     $("#hintModal").modal("show");
+                //     setTimeout(function(){
+                //         $("#hintModal").modal("hide");
+                //     }, 1000);
+                // }
+            });
+        }
+
+		//发布说说
+        function publish() {
+            //发布之后，发布框隐藏
+            $("#publishModal").modal("hide");
+            //获取要发布的信息
+            var content = $("#message-text").val();
+            $("#message-text").val("");
+            $.post({
+                url:"/qq_system/user/publishDiscussPost",
+                data:{"content":content},
+                success:function (data) {
+                    //显示提示框消息
+                    $("#hintBody").text(data);
+                    $("#hintModal").modal("show");
+                    setTimeout(function(){
+                        $("#hintModal").modal("hide");
+                    }, 2000);
+                }
+            });
+        }
+
+
+        //异步获取朋友圈信息
+        function getFriendCircleInfo() {
+            $.ajax({
+                url:'/qq_system/user/getFriendCircleInfo',
+                success:function (data) {
+
+                    $("#friendCircle").empty();
+                    var $button = $("<div class=\"position-relative\"></div>")
+						.append($("<button type='button' class='btn btn-primary btn-sm position-absolute rt-0'" +
+							"data-toggle='modal' data-target='#publishModal'>发布说说</button>"));
+                    $("#friendCircle").append($button);
+                    var $result = $("<h6><b class=\"square\"></b>朋友圈</h6>")
+                    $("#friendCircle").append($result);
+
+                    if(data!=null&&data!=""){
+                        var friend_circle_list = data.split("*;*");//朋友圈列表
+
+                        for(i=0;i<friend_circle_list.length;i++){
+                            var $div = $("<div class='border-bottom' style='margin-bottom: 50px;'></div>")
+
+                            //获取当前朋友圈信息
+                            var attrs = friend_circle_list[i].split("*|*");
+
+                            /**********获取帖子信息**********/
+                            var info = attrs[0].split("*,*");
+
+                            var user_name = info[0];
+                            var header_url = info[1];
+                            var content=info[2];
+                            var create_time= info[3];
+                            var discussPostId = info[4];
+                            var isClickLike = info[5];
+                            var likeCount = info[6];
+                            var likeVO = (isClickLike==0?'赞':'已赞')+'('+likeCount+')';
+                            var user_id = info[7];
+
+                            //帖子作者
+                            var $div_author = $("<div class=\"media \" ></div>");
+                            var $a_headerUrl = $("<a href=\"/qq_system/user/profile?id="+user_id+"\"></a>")
+									.append($("<img src="+"'"+header_url+"'"+" class=\"align-self-start mr-4 rounded-circle user-header\" alt=\"用户头像\" >"));
+                            var $div_username = $("<div class=\"media-body\" ></div>")
+								.append($("<a href=\"/qq_system/user/profile?id="+user_id+"\" class=\"mt-0 text-warning\" style='font-size: 20px;'>"+user_name+"</a>"));
+                            if(user_name==tempUserName){
+                                $div_username = $("<div class=\"media-body\" ></div>")
+                                    .append($("<a href='/qq_system/user/profile' class=\"mt-0 \" style='font-size: 20px;color: deepskyblue'>我</a>"));
+							}
+                            $div_author.append($a_headerUrl).append($div_username);
+
+                            //帖子内容
+                            var $div_content = $("<div class=\" content\">"+content+"</div>");
+
+                            //发布状态
+                            var $div_state = $("<div class=\"text-muted mt-3\"></div>");
+                            var $div_createTime = $("<b>发布于："+create_time+"</b>");
+                            var $div_like = $("<ul class=\"d-inline float-right\"></ul>")
+								.append($("<li class=\"d-inline ml-2\">" +
+									"<a href='javascript:void(0);' class=\"text-primary\" onclick=\"click_like('"+1+"','"+discussPostId+"')\">"+likeVO+"</a></li>"))
+								.append($("<li class=\"d-inline ml-2\">|</li>"))
+								.append($("<li class=\"d-inline ml-2\"><a href=\"#replyform\" class=\"text-primary\" onclick=\"comment('"+0+"','"+user_name+"','"+discussPostId+"','"+0+"','"+"comment"+"')\">评论</a></li>"));
+                            $div_state.append($div_createTime).append($div_like);
+                            /**********获取帖子信息**********/
+
+
+                        // <ul class="d-inline float-right">
+                        //         <li class="d-inline ml-2">
+                        //             <a href="javascript:;" th:onclick="|like(this,2,${rvo.reply.id},${rvo.reply.userId});|" class="text-primary">
+                        //                 <b th:text="${rvo.likeStatus==1?'已赞':'赞'}">赞</b>(<i th:text="${rvo.likeCount}">1</i>)
+                        //             </a>
+                        //         </li>
+                        //     <li class="d-inline ml-2">|</li>
+                        //     <li class="d-inline ml-2">
+                        //         <a th:href="|#huifu-${rvoStat.count}|" data-toggle="collapse" class="text-primary">回复</a>
+                        //     </li>
+                        // </ul>
+
+
+                            /**********获取帖子评论**********/
+                            var $ul_reply_list = $("<ul class=\"list-unstyled mt-4 bg-gray p-3 font-size-12 text-muted\"></ul>")
+                            for(j=1;j<attrs.length;j++){
+                                var comment = attrs[j].split("*,*");
+                                var from_id = comment[0];
+                                var from_username = comment[1];
+                                var to_username = comment[2];
+                                var content = comment[3];
+                                var createTime = comment[4];
+                                var isClickComment = comment[5];//是否点赞
+                                var commentLikeCount = comment[6];//点赞数
+                                var commentLikeVO = (isClickComment==0?'赞':'已赞')+'('+commentLikeCount+')';
+                                var commentId = comment[7];
+                                var target_id = comment[8];
+
+                                var $li_reply = $("<li class=\"pb-3 pt-3 mb-3 border-bottom\"></li>");
+                                var $reply_content = $("<div style='font-size: 14px;'></div>");
+                                var $replyer = $("<span></span>")
+                                if(to_username=="*null*"){
+                                    var $b_from_username = $("<a href=\"/qq_system/user/profile?id="+from_id+"\" class=\"text-info\">"+from_username+":&nbsp;&nbsp;"+"</a>");
+                                    if(from_username==tempUserName)
+                                        $b_from_username = $("<a href='/qq_system/user/profile' style='color: deepskyblue'>我:&nbsp;&nbsp;"+"</a>");
+                                    $replyer.append($b_from_username);
+                                }else{
+                                    //发送者
+                                    var $b_from_username = $("<a href=\"/qq_system/user/profile?id="+from_id+"\" class=\"text-info\">"+from_username+"</a>");
+                                    if(from_username==tempUserName)
+                                        $b_from_username = $("<a href='/qq_system/user/profile' style='color: deepskyblue'>我</a>");
+                                    //接受者
+                                    var $b_to_userename = $("<a href=\"/qq_system/user/profile?id="+target_id+"\" class=\"text-info\">"+to_username+":&nbsp;&nbsp;"+"</a>");
+                                    if(to_username==tempUserName)
+                                        $b_to_userename = $("<a href='/qq_system/user/profile' style='color: deepskyblue'>我:&nbsp;&nbsp;"+"</a>");
+                                    //添加发送者、接受者
+                                    $replyer.append($b_from_username)
+										.append("回复")
+										.append($b_to_userename);
+                                }
+                                //onclick=\"click_like('"+1+"','"+discussPostId+"')\"
+                                var $div_reply = $("<ul class=\"d-inline float-right\"></ul>")
+                                    .append($("<li class=\"d-inline ml-2\">" +
+										"<a href='javascript:void(0);' onclick=\"click_like('"+2+"','"+commentId+"')\" style='color: saddlebrown'>"+commentLikeVO+"</a></li>"))
+                                    .append($("<li class=\"d-inline ml-2\">|</li>"))
+                                    .append($("<li class=\"d-inline ml-2\">" +
+                                        "<a href=\"#replyform\" style='color: saddlebrown'" +
+                                        "onclick=\"comment('"+commentId+"','"+user_name+"','"+discussPostId+"','"+from_id+"','"+"reply"+"')\">回复</a></li>"));
+                                var $b_createTime = $("<p style='margin: 0px;'>发布于："+createTime+"</p>");
+
+                                $reply_content.append($replyer)
+									.append($("<span>"+content+"</span>"))
+                                    .append($div_reply);
+                                $li_reply.append($reply_content).append($b_createTime);
+                                $ul_reply_list.append($li_reply);
+                            }
+                            /**********获取帖子评论**********/
+
+
+                            $div.append($div_author).append($div_content).append($div_state);
+                            if(attrs.length>1)
+                                $div.append($ul_reply_list);
+
+                            $("#friendCircle").append($div);
+                        }
+                    }
+                }
+            });
+        }
+
+        //实时获取好友列表信息
+        getFriendCircleInfo();
+        setInterval(function () {
+            getFriendCircleInfo();
+        },1200);
+	</script>
+</body>
+</html>

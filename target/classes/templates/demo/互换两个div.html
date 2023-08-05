@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<ul>
+    <li id="1">1111</li>
+    <li id="2">2222</li>
+    <li id="3">3333</li>
+    <li id="4">4444</li>
+</ul>
+<button onclick="aaa()">asfe</button>
+
+</body>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+<script>
+    function aaa() {
+        $("#3").fadeOut(1000);
+        $("#4").fadeOut(1000,function () {
+            $("#3").before($("#4"));
+        });
+        $("#3").fadeIn(1000);
+        $("#4").fadeIn(1000);
+    }
+
+</script>
+</html>

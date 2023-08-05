@@ -1,0 +1,277 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-个人链接列表</title>
+	<style>
+		.color{
+			background-color: chartreuse;
+		}
+	</style>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::header">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main" >
+			<div class="container">
+
+				<!--让文字自动换行：style="word-break: break-all"-->
+				<ul style="word-break: break-all;padding-left: 0px;">
+
+					<h6 style="margin-left: 5px;">
+						<div>
+							<form style="width: 70%;display: inline-block;margin: 0px;padding: 0px;" th:action="@{/user/personalLink}" method="post">
+								<input style="width: 70%;" type="text" name="key">
+								<input style="width: 25%" class="btn btn-primary btn-sm rt-0" type="submit" value="查询">
+							</form>
+							<button style="width: 25%" class="btn btn-primary btn-sm rt-0"
+									data-toggle="modal" data-target="#publishModal" onclick="clearData()" >添加链接</button>
+						</div>
+						<div>链接数：<i th:text="${linkListSize}"></i></div>
+					</h6>
+
+					<li th:id="|li-${link.id}|" th:each="link:${linkList}" class="media pt-3 border-bottom">
+						<!--未读消息数量的标签，如果为0，则隐藏，不为0，则显示-->
+						<div th:id="|backgroundColor-${link.id}|" th:style="|background-color: ${link.backColor}|" class="media-body">
+							<div th:onclick="|goInto(${link.id})|" onmouseover="this.className='color'" onmouseout="this.className=''"
+								 class="text-muted font-size-12" style="font-size: 20px;padding: 5px;">
+								<u class="mr-3">
+									<span th:style="|color: ${link.keyColor}|" th:id="|showKey${link.id}|" th:text="${link.key}"></span>
+								</u>
+								<div style="padding: 0px;">
+									<!--消息内容如果不为空则显示-->
+									<div style="color: grey;height: 35px;overflow: hidden;margin: 0px;" th:id="|showValue${link.id}|" th:text="${link.value}"></div>
+                                    <span th:style="|color: ${link.keyColor};font-size:15px;margin:0px;|" th:id="|date${link.id}|" th:text="${#dates.format(link.createTime,'yyyy-MM-dd HH:mm:ss')}"></span>
+                                </div>
+							</div>
+							<button class="btn btn-primary btn-sm rt-0" th:onclick="|deleteLink(${link.id})|">删除</button>
+							<button class="btn btn-primary btn-sm rt-0"
+									th:onclick="|fillingData(${link.id})|"
+									data-toggle="modal" data-target="#publishModal">修改</button>
+							<button class="btn btn-primary btn-sm rt-0" th:onclick="|copy(${link.id},'key')|">获取key</button>
+							<button class="btn btn-primary btn-sm rt-0" th:onclick="|copy(${link.id},'value')|">获取value</button>
+							<button class="btn btn-primary btn-sm rt-0" th:onclick="|move(${link.id},'up')|">向上移动</button>
+							<button class="btn btn-primary btn-sm rt-0" th:onclick="|move(${link.id},'down')|">向下移动</button>
+							<button th:id="|backColorBtn${link.id}|" class="btn btn-primary btn-sm rt-0" th:onclick="|changeBackColor(${link.id})|" th:text="${link.backColor}"></button>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+
+
+		<!-- 弹出框 -->
+		<div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="publishModalLabel">新建链接</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="form-group">
+							<!--隐藏的链接id，如果值为空，代表新建链接，不为空代表更新链接-->
+							<input type="hidden" id="linkId">
+							<label for="message-text" class="col-form-label">链接名称：</label>
+							<input type="text" class="form-control" id="key"></input>
+							<label for="message-text" class="col-form-label">链接地址：</label>
+							<textarea class="form-control" id="value" rows="5"></textarea>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+						<button type="button" class="btn btn-primary" id="publishBtn" onclick="createOrUpdateLink()">发布</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/global.js}"></script>
+	<script th:src="@{/js/header.js}"></script>
+	<script>
+
+
+		//复制文本
+        function copy(id,opr) {
+            if(opr=='key')
+                id = "showKey"+id;
+            else
+                id = "showValue"+id;
+            var val = document.getElementById(id);
+            window.getSelection().selectAllChildren(val);
+            document.execCommand("Copy");
+        }
+
+        //输入value时，监听回车事件
+        $("#value").bind('keyup',function (e) {
+			if(e.keyCode=='13'){
+			    $("#publishBtn").click();
+			}
+        })
+        //输入key时，监听回车事件
+        $("#key").bind('keyup',function (e) {
+            if(e.keyCode=='13'){
+                $("#publishBtn").click();
+            }
+        })
+
+		function goInto(id) {
+		    var url = $("#showValue"+id).text();
+		    if(url.indexOf("http"))
+		        url = "http://"+url;
+		    window.open(url);
+			// location.href = url;
+        }
+
+        function deleteLink(id) {
+			var chs = confirm("确认要删除？")
+			if(chs){
+			    $.ajax({
+					url:"/qq_system/user/deleteLink",
+					data:{id:id},
+					success:function () {
+						location.reload();
+                    }
+				})
+			}
+        }
+
+        function fillingData(id) {
+            var key = $("#showKey"+id).text();
+            var value = $("#showValue"+id).text();
+			$("#linkId").val(id);
+			$("#key").val(key);
+			$("#value").val(value);
+        }
+
+        function clearData() {
+			$("#linkId").val("");
+			$("#key").val("");
+			$("#value").val("");
+        }
+
+        function changeBackColor(id) {
+
+            var color = $("#backColorBtn"+id).text();
+            var keyColor = null;
+
+			if(color=="yellow"){
+			    color = "green";
+			    keyColor = "red";
+                $("#backColorBtn"+id).text("green");
+			}else if(color=="green"){
+			    color = "pink";
+				keyColor = "green";
+				$("#backColorBtn"+id).text("pink");
+			}else if(color=="pink"){
+			    color = "red";
+				keyColor = "green";
+				$("#backColorBtn"+id).text("red");
+			}else if(color=="red"){
+			    color = "purple";
+			    keyColor = "white";
+			    $("#backColorBtn"+id).text("purple");
+			}else if(color=="purple"){
+                color = "blueviolet";
+                keyColor = "yellow";
+                $("#backColorBtn"+id).text("blueviolet");
+			}else{
+                color = "yellow";
+                keyColor = "blue";
+                $("#backColorBtn"+id).text("yellow");
+			}
+			$.ajax({
+				url:"/qq_system/user/changeBackColor",
+				data:{id:id,color:color,keyColor:keyColor},
+				success:function () {
+                    $("#backgroundColor-"+id).css("background-color",color);
+                    $("#showKey"+id).css("color",keyColor);
+                    $("#date"+id).css("color",keyColor);
+                }
+			});
+        }
+
+
+        //交换两个li标签
+        function move(id,dir) {
+			$.ajax({
+				url:"/qq_system/user/moveLink",
+				data:{id:id,dir:dir},
+				success:function (data) {
+				    var tempId = parseInt(data);
+					if(tempId!=-1){
+                        $("#li-"+id).fadeOut(200);
+                        $("#li-"+tempId).fadeOut(200,function () {
+                            if(dir=="down"){
+                                $("#li-"+id).before($("#li-"+tempId));
+                            }else{
+                                $("#li-"+id).after($("#li-"+tempId));
+                            }
+                        });
+                        $("#li-"+id).fadeIn(200);
+                        $("#li-"+tempId).fadeIn(200);
+					}
+				}
+			})
+        }
+
+
+
+        function createOrUpdateLink() {
+
+		    var key = $("#key").val();
+		    var value = $("#value").val();
+		    var linkId = $("#linkId").val();
+
+		    if(key==null||key==""){
+		        key = "key为空";
+			}
+			if(value==null||value==""){
+		        value = "value为空";
+			}
+
+
+			if(linkId==null||linkId==""){//值为空，代表新建链接
+                $.post({
+                    url:"/qq_system/user/createLink",
+                    data:{key:key,value:value},
+                    success:function () {
+                        location.reload();
+                    }
+                });
+			}else{
+                $.post({
+                    url:"/qq_system/user/updateLink",
+                    data:{key:key,value:value,linkId:linkId},
+                    success:function () {
+                        $("#showKey"+linkId).text(key);
+                        $("#showValue"+linkId).text(value);
+                        $("#publishModal").modal("hide");
+                    }
+                });
+			}
+
+
+        }
+
+	</script>
+</body>
+</html>

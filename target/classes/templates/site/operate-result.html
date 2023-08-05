@@ -1,0 +1,47 @@
+<!doctype html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" href="http://81.68.198.238:8888/qq_system/user/image/flag.jpg"/>
+	<link rel="stylesheet" th:href="@{/css/common/bootstrap.min.css}" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>聊天系统-操作结果</title>
+</head>
+<body class="bg-white">
+	<div class="nk-container">
+
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container mt-5">
+				<div class="jumbotron">
+					<p class="lead" th:text="${msg}">您的账号已经激活成功,可以正常使用了!</p>
+					<hr class="my-4">
+					<p>
+						系统会在 <span id="seconds" class="text-danger">8</span> 秒后自动跳转,
+						您也可以点此 <a id="target" th:href="@{${target}}" class="text-primary">链接</a>, 手动跳转!
+					</p>
+				</div>
+			</div>
+		</div>
+
+
+	<script th:src="@{/js/common/jquery-3.3.1.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/popper.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/bootstrap.min.js}" crossorigin="anonymous"></script>
+	<script th:src="@{/js/common/vue.js}"></script>
+	<script th:src="@{/js/jquery-1.8.3.min.js}"></script>
+	<script>
+		$(function(){
+			setInterval(function(){
+				var seconds = $("#seconds").text();
+				$("#seconds").text(--seconds);
+				if(seconds == 0) {
+					location.href = $("#target").attr("href");
+				}
+			}, 1000);
+		});
+	</script>
+</body>
+</html>
